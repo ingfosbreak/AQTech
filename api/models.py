@@ -22,16 +22,74 @@ class Student(models.Model):
         return self.name
 
 class Teacher(models.Model):
-    pass
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="teacher")
+    name = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.name
 
 class Level(models.Model):
     levelName = models.CharField(max_length=50)
+
+    def __str__(self):
+        return self.levelName
+
 
 class Course(models.Model):
     courseName = models.CharField(max_length=100)
     description = models.TextField()
     level = models.ForeignKey(Level, on_delete=models.CASCADE, related_name="courses")
 
+    def __str__(self):
+        return self.courseName
+    
 class CourseSession(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="sessions")
-    # teacher = 
+    teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE, related_name="sessions")
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name="sessions")
+
+    session_number = models.IntegerField()
+    session_date = models.DateField()
+    total_quota = models.IntegerField()
+    start_time = models.TimeField()
+    end_time = models.TimeField()
+
+class Attendance(models.Model):
+    STATUS_CHOICES = [
+        ('present', 'Present'),
+        ('absent', 'Absent'),
+    ]
+
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='absent')
+    session = models.ForeignKey(CourseSession, on_delete=models.CASCADE, related_name="attendances")
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name="attendances")
+    teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE, related_name="attendances")
+    checked_date = models.DateTimeField()
+    ## comment
+
+class Certificate(models.Model):
+    STATUS_CHOICES = [
+        ('issued', 'Issued'),
+        ('revoked', 'Revoked'),
+    ]
+
+    ## ผูกกับประเภทคอร์ส
+    ## มีรูปภาพ
+
+class Receipt(models.Model):
+    PAYMENT_METHOD_CHOICES = [
+        ('Cash', 'Cash'),
+        ('Credit Card', 'Credit Card'),
+        ('Bank Transfer', 'Bank Transfer'),
+        ('E-Wallet', 'E-Wallet'),
+    ]
+
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name="receipts")
+    session = models.ForeignKey(CourseSession, on_delete=models.CASCADE, related_name="receipts")
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    payment_date = models.DateTimeField(auto_now_add=True)
+    payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES)
+    transaction_id = models.CharField(max_length=100, unique=True) ## ??
+
+class Storage(models.Model):
+    pass
