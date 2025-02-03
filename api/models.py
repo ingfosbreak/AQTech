@@ -54,6 +54,8 @@ class CourseSession(models.Model):
     start_time = models.TimeField()
     end_time = models.TimeField()
 
+    ## not sure
+
 class Attendance(models.Model):
     STATUS_CHOICES = [
         ('present', 'Present'),
@@ -65,7 +67,7 @@ class Attendance(models.Model):
     student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name="attendances")
     teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE, related_name="attendances")
     checked_date = models.DateTimeField()
-    ## comment
+    ## comment field ??
 
 class Certificate(models.Model):
     STATUS_CHOICES = [
@@ -75,6 +77,11 @@ class Certificate(models.Model):
 
     ## ผูกกับประเภทคอร์ส
     ## มีรูปภาพ
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="certificates")
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="certificates")
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='issued')
+    # issued_date = models.DateTimeField(auto_now_add=True)
+    # certificate_image = models.ImageField(upload_to="certificates/", null=True, blank=True)
 
 class Receipt(models.Model):
     PAYMENT_METHOD_CHOICES = [
@@ -89,7 +96,9 @@ class Receipt(models.Model):
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     payment_date = models.DateTimeField(auto_now_add=True)
     payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES)
-    transaction_id = models.CharField(max_length=100, unique=True) ## ??
+    transaction_id = models.CharField(max_length=100, unique=True) ##  what is this ??
 
 class Storage(models.Model):
-    pass
+    title = models.CharField(max_length=100)
+    storage_image = models.ImageField(upload_to="storages/", null=True, blank=True)
+    quantiry = models.DecimalField(max_digits=10)
