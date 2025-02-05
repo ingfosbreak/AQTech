@@ -101,4 +101,4 @@ class Receipt(models.Model):
 class Storage(models.Model):
     title = models.CharField(max_length=100)
     storage_image = models.ImageField(upload_to="storages/", null=True, blank=True)
-    quantiry = models.IntegerField()
+    quantity = models.IntegerField()
