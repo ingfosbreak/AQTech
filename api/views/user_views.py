@@ -4,7 +4,8 @@ from rest_framework import status
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from api.permissions import IsAdmin
 from api.models import User
-from api.serializers.user_serializers import UserSerializer
+# from api.serializers.user_serializers import UserSerializer
+from api.serializers import UserSerializer
 # from django.shortcuts import get_object_or_404
 
 

@@ -4,8 +4,8 @@ from rest_framework import status
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from api.permissions import IsAdmin
 from api.models import Storage
-# from api.serializers import StorageSerializer
-from api.serializers.storage_serializers import StorageSerializer
+from api.serializers import StorageSerializer
+# from api.serializers.storage_serializers import StorageSerializer
 
 class StorageListView(APIView):
     authentication_classes = [JWTAuthentication]

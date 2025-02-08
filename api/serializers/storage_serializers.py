@@ -12,4 +12,4 @@ class StorageSerializer(serializers.ModelSerializer):
         # Custom validation to ensure quantity isn't negative
         if value < 0:
             raise serializers.ValidationError('Quantity cannot be lower than 0.')
-        return value
+        return value 
