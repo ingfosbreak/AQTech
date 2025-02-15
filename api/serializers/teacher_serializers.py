@@ -1,9 +1,9 @@
 from rest_framework import serializers
-from api.models import Teacher
-from .user_serializers import UserSerializer
+from api.models import Teacher, User
+# from .user_serializers import UserSerializer
 
 class TeacherSerializer(serializers.ModelSerializer):
-    user = UserSerializer()
+    user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
 
     class Meta:
         model = Teacher
