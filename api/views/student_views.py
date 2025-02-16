@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from api.permissions import IsAdmin
-from api.models import Student
+from api.models import User, Student
 from api.serializers import StudentSerializer
 
 class StudentCreateView(APIView):
@@ -11,6 +11,22 @@ class StudentCreateView(APIView):
     permission_classes = [IsAdmin]
 
     def post(self, request):
+
+        user_id = request.data.get("user")
+        # Ensure user exists
+        try:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return Response(
+                {"user": "User not found."}, status=status.HTTP_400_BAD_REQUEST
+            )
+        
+         # Check if the user's role is "user"
+        if user.role != "user":  # Adjust the role check based on your User model
+            return Response(
+                {"user": "This user does not have a user role."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         
         serializer = StudentSerializer(data=request.data)
         if serializer.is_valid():
