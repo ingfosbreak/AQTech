@@ -32,7 +32,7 @@ class Command(BaseCommand):
 
         # Create Attendance Records
         Attendance.objects.create(student=student1, session=session1, teacher=teacher1,
-                                  status='present', checked_date=timezone.now())
+                                  status='present', attendance_date=timezone.now(), checked_date=timezone.now())
 
         # Create Certificates
         Certificate.objects.create(user=user1, course=course1,

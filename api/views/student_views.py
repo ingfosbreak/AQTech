@@ -7,8 +7,8 @@ from api.models import User, Student
 from api.serializers import StudentSerializer
 
 class StudentCreateView(APIView):
-    authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAdmin]
+    # authentication_classes = [JWTAuthentication]
+    # permission_classes = [IsAdmin]
 
     def post(self, request):
 
@@ -36,8 +36,8 @@ class StudentCreateView(APIView):
 
 
 class StudentListView(APIView):
-    authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAdmin]
+    # authentication_classes = [JWTAuthentication]
+    # permission_classes = [IsAdmin]
 
     def get(self, request):
         students = Student.objects.all()

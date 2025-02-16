@@ -2,7 +2,7 @@ from .storage_serializers import StorageSerializer
 from .user_serializers import UserSerializer
 from .student_serializers import StudentSerializer
 from .teacher_serializers import TeacherSerializer
-from .session_serizlizers import CourseSessionSerializer
+from .session_serializers import CourseSessionSerializer
 from .receipt_serializers import ReceiptSerializer
 from .level_serializers import LevelSerializer
 from .course_serializers import CourseSerializer

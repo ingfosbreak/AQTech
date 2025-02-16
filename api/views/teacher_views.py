@@ -7,8 +7,8 @@ from api.models import User, Teacher
 from api.serializers import TeacherSerializer
 
 class TeacherCreateView(APIView):
-    authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAdmin]
+    # authentication_classes = [JWTAuthentication]
+    # permission_classes = [IsAdmin]
 
     def post(self, request):
 
@@ -42,8 +42,8 @@ class TeacherCreateView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class TeacherListView(APIView):
-    authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAdmin]
+    # authentication_classes = [JWTAuthentication]
+    # permission_classes = [IsAdmin]
 
     def get(self, request):
         teachers = Teacher.objects.all()

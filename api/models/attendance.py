@@ -13,5 +13,6 @@ class Attendance(models.Model):
     session = models.ForeignKey(CourseSession, on_delete=models.CASCADE, related_name="attendances")
     student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name="attendances")
     teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE, related_name="attendances")
-    checked_date = models.DateTimeField(null=True)
+    attendance_date = models.DateField()
+    checked_date = models.DateTimeField(null=True, blank=True)
     # comment = models.TextField(null=True, blank=True)  # Added comment field

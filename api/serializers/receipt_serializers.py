@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from api.models import Receipt
 from .student_serializers import StudentSerializer
-from .session_serizlizers import CourseSessionSerializer
+from .session_serializers import CourseSessionSerializer
 
 class ReceiptSerializer(serializers.ModelSerializer):
     student = StudentSerializer()
