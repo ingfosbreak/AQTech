@@ -8,8 +8,8 @@ from api.serializers import StorageSerializer
 # from api.serializers.storage_serializers import StorageSerializer
 
 class StorageListView(APIView):
-    authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAdmin]
+    # authentication_classes = [JWTAuthentication]
+    # permission_classes = [IsAdmin]
 
     def get(self, request):
         storages = Storage.objects.all()
@@ -25,8 +25,8 @@ class StorageListView(APIView):
     
 
 class StorageDetailView(APIView):
-    authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAdmin]
+    # authentication_classes = [JWTAuthentication]
+    # permission_classes = [IsAdmin]
 
     def get(self, request, pk):
         try:
