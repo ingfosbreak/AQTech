@@ -32,6 +32,22 @@ class UserUpdateView(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+class UserInfoView(APIView):
+    authentication_classes = [JWTAuthentication]
+    # permission_classes = [IsAdmin]
 
+    def get(self, request):
+        authenticated_user = request.user
+       
+        return Response({
+            "username": authenticated_user.username,
+            "role": authenticated_user.role,  
+        })
+
+class VerifyTokenView(APIView):
+    authentication_classes = [JWTAuthentication]
+
+    def get(self, request):
+        return Response({"message": "Token is valid"}, status=status.HTTP_200_OK)
 
 # user = get_object_or_404(User, pk=pk)
