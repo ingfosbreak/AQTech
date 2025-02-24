@@ -8,7 +8,6 @@ class CourseSession(models.Model):
     teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE, related_name="sessions")
     student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name="sessions")
 
-    session_number = models.IntegerField()
     session_date = models.DateField()
     total_quota = models.IntegerField()
     start_time = models.TimeField()
