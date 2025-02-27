@@ -1,7 +1,7 @@
 from django.urls import path
 # from .views import Home
 # from api.views.storage_views import StorageListView, StorageDetailView
-from api.views import StorageListView, StorageDetailView, StaffUserView, UserUpdateView, StudentCreateView, StudentListView, TeacherCreateView, TeacherListView, SessionView, UserInfoView, VerifyTokenView
+from api.views import StorageListView, StorageDetailView, StaffUserView, UserUpdateView, StudentCreateView, StudentListView, TeacherCreateView, TeacherListView, SessionView, UserInfoView, VerifyTokenView, CombinedCountView
 # from api.views.user_views import StaffUserView, UserUpdateView
 
 urlpatterns = [
@@ -16,5 +16,6 @@ urlpatterns = [
     path('students/', StudentListView.as_view(), name="student-list"),
     path('teachers/create/', TeacherCreateView.as_view(), name="teacher-create"),
     path('teachers/', TeacherListView.as_view(), name="teacher-list"),
-    path('sessions/create/', SessionView.as_view(), name="session-create")
+    path('sessions/create/', SessionView.as_view(), name="session-create"),
+    path("static/count/", CombinedCountView.as_view(), name="combined-count"),
 ]

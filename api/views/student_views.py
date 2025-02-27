@@ -45,3 +45,17 @@ class StudentListView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
     
     
+# class StudentCountView(APIView):
+#     def get(self, request):
+#         active_students = Student.objects.filter(is_active=True).count()
+#         inactive_students = Student.objects.filter(is_active=False).count()
+#         total_students = Student.objects.count()
+
+#         return Response(
+#             {
+#                 "total_students": total_students,
+#                 "active_students": active_students,
+#                 "inactive_students": inactive_students,
+#             },
+#             status=status.HTTP_200_OK,
+#         )
