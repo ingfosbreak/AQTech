@@ -7,8 +7,8 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         # Create Users
-        user1 = User.objects.create_user(username='student1', password='password', role='user')
-        user2 = User.objects.create_user(username='teacher1', password='password', role='teacher')
+        user1 = User.objects.create_user(username='student1', password='password', role='user', contact="1234567891")
+        user2 = User.objects.create_user(username='teacher1', password='password', role='teacher', contact="1234567891")
 
         # Create Students
         student1 = Student.objects.create(user=user1, name='John Doe', dob='2000-01-01', contact='1234567890', email='john@example.com')
