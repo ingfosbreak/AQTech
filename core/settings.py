@@ -151,3 +151,6 @@ CORS_ALLOWED_ORIGINS = [
 ]
 
 CORS_ALLOW_ALL_ORIGINS = True # indevelopment
+
+SUPABASE_URL = os.getenv("SUPABASE_URL", "https://irrgwghpvvwcgalcfkmh.supabase.co")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlycmd3Z2hwdnZ3Y2dhbGNma21oIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MTA3NTQ5MiwiZXhwIjoyMDU2NjUxNDkyfQ.KohiJB0lTXhzPSSp_EammvIx43hOxjoQ_Wg8ggSl2FA")
