@@ -9,3 +9,4 @@ class User(AbstractUser):
     )
 
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='user')
+    contact = models.CharField(max_length=15, blank=True, null=True)  # New phone number field

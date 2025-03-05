@@ -50,4 +50,13 @@ class VerifyTokenView(APIView):
     def get(self, request):
         return Response({"message": "Token is valid"}, status=status.HTTP_200_OK)
 
+class UserListView(APIView):
+    # authentication_classes = [JWTAuthentication]
+    # permission_classes = [IsAdmin]
+
+    def get(self, request):
+        users = User.objects.all()
+        serializer = UserSerializer(users, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
 # user = get_object_or_404(User, pk=pk)
