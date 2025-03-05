@@ -2,7 +2,7 @@ from rest_framework import serializers
 from api.models import Storage
 
 class StorageSerializer(serializers.ModelSerializer):
-    storage_image = serializers.ImageField(required=False, allow_null=True)
+    storage_image = serializers.URLField(required=False, allow_null=True)
 
     class Meta:
         model = Storage
