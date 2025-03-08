@@ -1,7 +1,7 @@
 from django.urls import path
 # from .views import Home
 # from api.views.storage_views import StorageListView, StorageDetailView
-from api.views import StorageListView, StorageDetailView, StaffUserView, UserUpdateView,UserListView, StudentCreateView, StudentListView, TeacherCreateView, TeacherListView, SessionView, UserInfoView, VerifyTokenView, CombinedCountView, PieChartStaticView
+from api.views import StorageListView, StorageDetailView, StaffUserView, UserUpdateView, UserDetailView, UserListView, StudentCreateView, StudentListView, TeacherCreateView, TeacherListView, SessionView, UserInfoView, VerifyTokenView, CombinedCountView, PieChartStaticView
 # from api.views.user_views import StaffUserView, UserUpdateView
 
 urlpatterns = [
@@ -13,6 +13,7 @@ urlpatterns = [
     path('user/info/', UserInfoView.as_view(), name="user-info"),
     path('user/verify/', VerifyTokenView.as_view(), name="user-verify"),
     path('user/list/', UserListView.as_view(), name="user-list"),
+    path('user/<int:user_id>/', UserDetailView.as_view(), name="user-detail"),
     path('students/create/', StudentCreateView.as_view(), name="student-create"),
     path('students/', StudentListView.as_view(), name="student-list"),
     path('teachers/create/', TeacherCreateView.as_view(), name="teacher-create"),

@@ -2,13 +2,17 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from django.contrib.auth.hashers import make_password
 
+from .student_serializers import StudentSerializer
+
 User = get_user_model()
 
 # 🔹 User Serializer
 class UserSerializer(serializers.ModelSerializer):
+    students = StudentSerializer(many=True, read_only=True)  # Include student details
+    
     class Meta:
         model = User
-        fields = ["id", "username", "password", "email", "role", "first_name", "last_name", "contact"]
+        fields = ["id", "username", "password", "email", "role", "first_name", "last_name", "join_date" , "contact", "students"]
 
     def validate_password(self, value: str) -> str:
         """

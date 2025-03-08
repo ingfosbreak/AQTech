@@ -14,7 +14,6 @@ class CourseSessionSerializer(serializers.ModelSerializer):
     class Meta:
         model = CourseSession
         fields = [
-            "id", "course", "teacher", "student",
-            "session_number", "session_date", "total_quota",
+            "id", "course", "teacher", "student", "session_date", "total_quota",
             "start_time", "end_time"
         ]
