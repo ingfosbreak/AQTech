@@ -55,6 +55,12 @@ class AddStudentView(APIView):
         data = request.data.copy()
         data["user"] = user.id  # Assign user ID to student
 
+        if user.role != "user":  # Adjust the role check based on your User model
+            return Response(
+                {"user": "This user does not have a user role."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         serializer = StudentSerializer(data=data)
         if serializer.is_valid():
             serializer.save()

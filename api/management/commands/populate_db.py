@@ -11,11 +11,11 @@ User = get_user_model()  # Use custom User model if applicable
 # ------------------------- Create Users -------------------------
 def create_users():
     users = [
-        {"username": "admin", "password": "admin123", "email": "admin@example.com", "role": "admin", "join_date": datetime.now()},
+        {"username": "admin", "password": "admin123", "email": "admin@example.com", "role": "staff", "join_date": datetime.now()},
         {"username": "teacher1", "password": "pass123", "email": "teacher1@example.com", "role": "teacher", "join_date": datetime.now() - timedelta(days=100)},
         {"username": "teacher2", "password": "pass123", "email": "teacher2@example.com", "role": "teacher", "join_date": datetime.now() - timedelta(days=90)},
-        {"username": "student1", "password": "pass123", "email": "student1@example.com", "role": "student", "join_date": datetime.now() - timedelta(days=50)},
-        {"username": "student2", "password": "pass123", "email": "student2@example.com", "role": "student", "join_date": datetime.now() - timedelta(days=30)},
+        {"username": "student1", "password": "pass123", "email": "student1@example.com", "role": "user", "join_date": datetime.now() - timedelta(days=50)},
+        {"username": "student2", "password": "pass123", "email": "student2@example.com", "role": "user", "join_date": datetime.now() - timedelta(days=30)},
     ]
 
     user_objs = []

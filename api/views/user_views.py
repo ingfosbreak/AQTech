@@ -6,6 +6,7 @@ from api.permissions import IsAdmin
 from api.models import User
 # from api.serializers.user_serializers import UserSerializer
 from api.serializers import UserSerializer
+from api.serializers.user_serializers import UserListSerializer
 # from django.shortcuts import get_object_or_404
 
 
@@ -55,8 +56,8 @@ class UserListView(APIView):
     # permission_classes = [IsAdmin]
 
     def get(self, request):
-        users = User.objects.all()
-        serializer = UserSerializer(users, many=True)
+        users = User.objects.filter(role="user")
+        serializer = UserListSerializer(users, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 class UserDetailView(APIView):
@@ -66,7 +67,7 @@ class UserDetailView(APIView):
     def get(self, request, user_id):
         try:
             user = User.objects.prefetch_related("students").get(id=user_id)  # Optimize query
-            serializer = UserSerializer(user)
+            serializer = UserListSerializer(user)
             return Response(serializer.data, status=status.HTTP_200_OK)
         except User.DoesNotExist:
             return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
