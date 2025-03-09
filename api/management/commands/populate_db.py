@@ -43,30 +43,24 @@ def create_levels_and_courses():
     return course_objs
 
 
-# ------------------------- Create Teachers & Students -------------------------
-def create_teachers_and_students(users, courses):
+# ------------------------- Create Teachers -------------------------
+def create_teachers(users):
     teachers = [Teacher.objects.create(user=u, name=u.username) for u in users if u.role == "teacher"]
-    students = []
-
-    for u in users:
-        if u.role == "student":
-            student = Student.objects.create(user=u, name=u.username)
-            assigned_courses = random.sample(courses, k=random.randint(1, len(courses)))  # Assign random courses
-            student.courses.set(assigned_courses)  # ManyToMany assignment
-            students.append(student)
-
-    print(f"✅ Created {len(teachers)} teachers & {len(students)} students (with courses).")
-    return teachers, students
+    print(f"✅ Created {len(teachers)} teachers.")
+    return teachers
 
 
-# ------------------------- Create Course Sessions -------------------------
-def create_course_sessions(courses, teachers, students):
+# ------------------------- Create Course Sessions (with Mock Student) -------------------------
+def create_course_sessions(courses, teachers):
+    # Create a mock student
+    mock_student = Student.objects.create(user=User.objects.first(), name="Mock Student")
+
     sessions = []
     for i in range(1, 6):  # Create 5 sessions
         session = CourseSession.objects.create(
             course=random.choice(courses),
             teacher=random.choice(teachers),
-            student=random.choice(students),
+            student=mock_student,  # Assign mock student
             session_date=datetime.now() + timedelta(days=i),
             total_quota=20,
             start_time="10:00",
@@ -74,8 +68,31 @@ def create_course_sessions(courses, teachers, students):
         )
         sessions.append(session)
 
-    print(f"✅ Created {len(sessions)} course sessions.")
-    return sessions
+    print(f"✅ Created {len(sessions)} course sessions with a mock student.")
+    return sessions, mock_student
+
+
+# ------------------------- Create Students & Assign to Sessions -------------------------
+def create_students(users, course_sessions, mock_student):
+    students = []
+
+    for u in users:
+        if u.role == "student":
+            student = Student.objects.create(user=u, name=u.username)
+            
+            if course_sessions:
+                assigned_sessions = random.sample(course_sessions, k=random.randint(1, len(course_sessions)))
+                student.course_sessions.set(assigned_sessions)  # Assign CourseSessions directly
+                
+                # Update the first session to replace the mock student
+                for session in assigned_sessions:
+                    session.student = student
+                    session.save()
+
+            students.append(student)
+
+    print(f"✅ Created {len(students)} students and replaced mock students in course sessions.")
+    return students
 
 
 # ------------------------- Create Attendance Records -------------------------
@@ -145,8 +162,9 @@ def create_certificates(users, courses):
 def populate_database():
     users = create_users()
     courses = create_levels_and_courses()
-    teachers, students = create_teachers_and_students(users, courses)
-    sessions = create_course_sessions(courses, teachers, students)
+    teachers = create_teachers(users)  
+    sessions, mock_student = create_course_sessions(courses, teachers)  # Create course sessions with mock student
+    students = create_students(users, sessions, mock_student)  # Replace mock student with real ones
     create_attendance(sessions, teachers, students)
     create_storage()
     create_receipts(students, sessions)
