@@ -45,7 +45,23 @@ class StudentListView(APIView):
         serializer = StudentListSerializer(students, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
     
-    
+class AddStudentView(APIView):
+    def post(self, request, user_id):
+        try:
+            user = User.objects.get(id=user_id)  # Get the user
+        except User.DoesNotExist:
+            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        data = request.data.copy()
+        data["user"] = user.id  # Assign user ID to student
+
+        serializer = StudentSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 # class StudentCountView(APIView):
 #     def get(self, request):
 #         active_students = Student.objects.filter(is_active=True).count()
