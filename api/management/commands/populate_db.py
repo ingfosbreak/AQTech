@@ -78,21 +78,28 @@ def create_students(users, course_sessions, mock_student):
 
     for u in users:
         if u.role == "student":
-            student = Student.objects.create(user=u, name=u.username)
-            
+            student = Student.objects.create(
+                user=u, 
+                name=u.username
+            )
+
             if course_sessions:
                 assigned_sessions = random.sample(course_sessions, k=random.randint(1, len(course_sessions)))
-                student.course_sessions.set(assigned_sessions)  # Assign CourseSessions directly
                 
-                # Update the first session to replace the mock student
+                # Assuming Many-to-Many relationship exists
+                student.sessions.set(assigned_sessions)  
+
+                # Replace the mock student in assigned sessions
                 for session in assigned_sessions:
-                    session.student = student
-                    session.save()
+                    if session.student == mock_student:
+                        session.student = student
+                        session.save()
 
             students.append(student)
 
     print(f"✅ Created {len(students)} students and replaced mock students in course sessions.")
     return students
+
 
 
 # ------------------------- Create Attendance Records -------------------------

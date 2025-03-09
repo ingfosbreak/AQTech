@@ -2,13 +2,13 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from django.contrib.auth.hashers import make_password
 
-from .student_serializers import StudentSerializer
+from .student_serializers import StudentListSerializer, StudentSerializer
 
 User = get_user_model()
 
 # 🔹 User Serializer
 class UserSerializer(serializers.ModelSerializer):
-    students = StudentSerializer(many=True, read_only=True)  # Include student details
+    students = StudentListSerializer(many=True, read_only=True)  # Include student details
     
     class Meta:
         model = User

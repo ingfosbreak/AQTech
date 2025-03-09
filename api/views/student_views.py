@@ -5,6 +5,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from api.permissions import IsAdmin
 from api.models import User, Student
 from api.serializers import StudentSerializer
+from api.serializers.student_serializers import StudentListSerializer
 
 class StudentCreateView(APIView):
     # authentication_classes = [JWTAuthentication]
@@ -41,7 +42,7 @@ class StudentListView(APIView):
 
     def get(self, request):
         students = Student.objects.all()
-        serializer = StudentSerializer(students, many=True)
+        serializer = StudentListSerializer(students, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
     
     
