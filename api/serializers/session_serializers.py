@@ -19,13 +19,8 @@ class CourseSessionSerializer(serializers.ModelSerializer):
         ]
 
 class CourseSessionListSerializer(serializers.ModelSerializer):
-    course = serializers.PrimaryKeyRelatedField(queryset=Course.objects.all())
-    teacher = serializers.PrimaryKeyRelatedField(queryset=Teacher.objects.all())
-    student = serializers.PrimaryKeyRelatedField(queryset=Student.objects.all())
+    courseName = serializers.CharField(source="course.courseName", read_only=True)  # ✅ Extracts only courseName
 
     class Meta:
         model = CourseSession
-        fields = [
-            "id", "course", "teacher", "student", "session_date", "total_quota",
-            "start_time", "end_time"
-        ]
+        fields = ["courseName"]  # ✅ Returns only courseName
