@@ -5,6 +5,8 @@ from rest_framework.response import Response
 from rest_framework import status
 import json
 
+stripe.api_key = settings.STRIPE_SECRET_KEY
+
 class CreatePaymentIntentView(APIView):
     def post(self, request):
         try:
