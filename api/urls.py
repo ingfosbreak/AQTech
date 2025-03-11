@@ -2,6 +2,7 @@ from django.urls import path
 # from .views import Home
 # from api.views.storage_views import StorageListView, StorageDetailView
 from api.views import StorageListView, StorageDetailView, StaffUserView, UserUpdateView, UserDetailView, UserListView, StudentCreateView, StudentListView, TeacherCreateView, TeacherListView, SessionView, UserInfoView, VerifyTokenView, CombinedCountView, PieChartStaticView
+from api.views.course_views import CourseCreateView, CourseListView
 from api.views.student_views import AddStudentView
 # from api.views.user_views import StaffUserView, UserUpdateView
 
@@ -23,4 +24,7 @@ urlpatterns = [
     path('sessions/create/', SessionView.as_view(), name="session-create"),
     path("static/count/", CombinedCountView.as_view(), name="combined-count"),
     path("static/pie/", PieChartStaticView.as_view(), name="pie-count"),
+    path('courses/', CourseListView.as_view(), name='course-list'),  # GET /courses/
+    path('courses/create/', CourseCreateView.as_view(), name='course-create'),  # POST /courses/create/
+
 ]

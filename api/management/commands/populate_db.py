@@ -27,19 +27,37 @@ def create_users():
     return user_objs
 
 
-# ------------------------- Create Levels & Courses -------------------------
+from django.utils.timezone import now
+from api.models import Level, Course
+
 def create_levels_and_courses():
     levels = ["Beginner", "Intermediate", "Advanced"]
-    level_objs = [Level.objects.create(levelName=l) for l in levels]
+    level_objs = {}
+
+    # Create or update levels
+    for level_name in levels:
+        level, created = Level.objects.get_or_create(levelName=level_name)
+        level_objs[level_name] = level
 
     courses = [
-        {"courseName": "Python Basics", "description": "Learn Python from scratch", "level": level_objs[0]},
-        {"courseName": "Machine Learning", "description": "ML basics", "level": level_objs[1]},
-        {"courseName": "Django Web Development", "description": "Build web apps using Django", "level": level_objs[2]},
+        {"courseName": "Python Basics", "description": "Learn Python from scratch", "level": level_objs["Beginner"]},
+        {"courseName": "Machine Learning", "description": "ML basics", "level": level_objs["Intermediate"]},
+        {"courseName": "Django Web Development", "description": "Build web apps using Django", "level": level_objs["Advanced"]},
     ]
-    course_objs = [Course.objects.create(**c) for c in courses]
 
-    print(f"✅ Created {len(level_objs)} levels & {len(course_objs)} courses.")
+    course_objs = []
+    for course_data in courses:
+        course, created = Course.objects.update_or_create(
+            courseName=course_data["courseName"],  # Unique identifier
+            defaults={
+                "description": course_data["description"],
+                "level": course_data["level"],
+                "created_at": course_data.get("created_at", now()) if created else Course.objects.get(courseName=course_data["courseName"]).created_at
+            },
+        )
+        course_objs.append(course)
+
+    print(f"✅ Updated/Created {len(level_objs)} levels & {len(course_objs)} courses.")
     return course_objs
 
 
