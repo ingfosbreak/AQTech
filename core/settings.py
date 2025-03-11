@@ -14,6 +14,11 @@ from pathlib import Path
 
 import os
 from datetime import timedelta
+import environ
+import stripe
+
+env = environ.Env()
+environ.Env.read_env(".env.dev")
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -152,5 +157,10 @@ CORS_ALLOWED_ORIGINS = [
 
 CORS_ALLOW_ALL_ORIGINS = True # indevelopment
 
-SUPABASE_URL = os.getenv("SUPABASE_URL", "https://irrgwghpvvwcgalcfkmh.supabase.co")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlycmd3Z2hwdnZ3Y2dhbGNma21oIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MTA3NTQ5MiwiZXhwIjoyMDU2NjUxNDkyfQ.KohiJB0lTXhzPSSp_EammvIx43hOxjoQ_Wg8ggSl2FA")
+SUPABASE_URL = env("SUPABASE_URL")
+SUPABASE_KEY = env("SUPABASE_KEY")
+
+STRIPE_SECRET_KEY = env("STRIPE_SECRET_KEY")
+STRIPE_WEBHOOK_SECRET = env("STRIPE_WEBHOOK_SECRET")
+
+stripe.api_key = STRIPE_SECRET_KEY
