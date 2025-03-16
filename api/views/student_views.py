@@ -1,11 +1,12 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status
+from rest_framework import status, permissions
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from api.permissions import IsAdmin
 from api.models import User, Student
 from api.serializers import StudentSerializer
 from api.serializers.student_serializers import StudentListSerializer
+from rest_framework.permissions import IsAuthenticated
 
 class StudentCreateView(APIView):
     # authentication_classes = [JWTAuthentication]
@@ -61,6 +62,14 @@ class AddStudentView(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class UserStudentListView(APIView):
+    # permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        students = Student.objects.filter(user=request.user.id)
+        serializer = StudentListSerializer(students, many=True)
+        return Response(serializer.data)
 
 # class StudentCountView(APIView):
 #     def get(self, request):

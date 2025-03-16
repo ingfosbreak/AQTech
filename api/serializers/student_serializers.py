@@ -11,7 +11,7 @@ class StudentSerializer(serializers.ModelSerializer):
 
 class StudentListSerializer(serializers.ModelSerializer):
     user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
-    sessions = CourseSessionListSerializer(many=True, read_only=True)  # ✅ Now only includes courseName
+    sessions = CourseSessionListSerializer(many=True, read_only=True)
     class Meta:
         model = Student
         fields = ["id", "user", "name", "birthdate", "sessions"]

@@ -22,3 +22,12 @@ class UserSerializer(serializers.ModelSerializer):
         :return: a hashed version of the password
         """
         return make_password(value)
+    
+
+# 🔹 Profile Serializer (For ProfilePage API)
+class ProfileSerializer(serializers.ModelSerializer):
+    students = StudentListSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = User
+        fields = ["id", "username", "email", "contact", "students"]

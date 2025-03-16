@@ -1,10 +1,14 @@
 from rest_framework.generics import ListAPIView
 from api.models import Course
+from api.models.session import CourseSession
+from api.models.student import Student
 from api.serializers.course_serializers import CourseSerializer
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
 from api.models import Course, Level
+from api.serializers.session_serializers import CourseSessionSerializer
+from rest_framework.permissions import IsAuthenticated
 
 class CourseListView(ListAPIView):
     queryset = Course.objects.all()
@@ -31,3 +35,34 @@ class CourseCreateView(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+class CourseProgressAPIView(APIView):
+    # permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        child_id = request.query_params.get("childId")
+
+        if not child_id:
+            return Response({"error": "childId is required"}, status=400)
+
+        try:
+            student = Student.objects.get(id=child_id, user=request.user)
+        except Student.DoesNotExist:
+            return Response({"error": "Student not found or unauthorized"}, status=404)
+
+        sessions = CourseSession.objects.filter(student=student)
+        serializer = CourseSessionSerializer(sessions, many=True)
+        return Response(serializer.data)
+
+class CompletedCoursesView(ListAPIView):
+    serializer_class = CourseSessionSerializer
+    # permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        student_id = self.request.query_params.get("studentId")
+        
+        if not student_id:
+            return CourseSession.objects.none()  # Return empty if no student ID
+        
+        # Filter sessions where total_quota is 0 (i.e., course is completed)
+        return CourseSession.objects.filter(student_id=student_id, total_quota=0)
