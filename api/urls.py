@@ -7,6 +7,8 @@ from api.views.session_views import SessionProgressView
 from api.views.student_views import AddStudentView, UserStudentListView
 from api.views.user_views import ProfileView
 from api.views.teacher_views import CreateUserTeacherView
+from api.views.student_views import AddStudentView
+from api.views import CreatePaymentIntentView
 # from api.views.user_views import StaffUserView, UserUpdateView
 
 urlpatterns = [
@@ -34,4 +36,5 @@ urlpatterns = [
     path("courses/completed/", CompletedCoursesView.as_view(), name="completed-courses"),
     path("profile/", ProfileView.as_view(), name="profile"),
 
+    path('create-payment-intent/', CreatePaymentIntentView.as_view(), name='create-payment-intent'),
 ]
