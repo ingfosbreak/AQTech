@@ -1,6 +1,7 @@
 import random
 from datetime import datetime, timedelta
 from django.contrib.auth import get_user_model
+from django.utils.timezone import now
 from api.models import (
     User, Teacher, Student, Level, Course, CourseSession, 
     Attendance, Receipt, Certificate, Storage
@@ -11,11 +12,11 @@ User = get_user_model()  # Use custom User model if applicable
 # ------------------------- Create Users -------------------------
 def create_users():
     users = [
-        {"username": "admin", "password": "admin123", "email": "admin@example.com", "role": "staff", "join_date": datetime.now()},
+        {"username": "staff", "password": "admin123", "email": "staff@example.com", "role": "staff", "join_date": datetime.now()},
         {"username": "teacher1", "password": "pass123", "email": "teacher1@example.com", "role": "teacher", "join_date": datetime.now() - timedelta(days=100)},
         {"username": "teacher2", "password": "pass123", "email": "teacher2@example.com", "role": "teacher", "join_date": datetime.now() - timedelta(days=90)},
-        {"username": "student1", "password": "pass123", "email": "student1@example.com", "role": "user", "join_date": datetime.now() - timedelta(days=50)},
-        {"username": "student2", "password": "pass123", "email": "student2@example.com", "role": "user", "join_date": datetime.now() - timedelta(days=30)},
+        {"username": "parent1", "password": "pass123", "email": "parent1@example.com", "role": "user", "join_date": datetime.now() - timedelta(days=50)},
+        {"username": "parent2", "password": "pass123", "email": "parent2@example.com", "role": "user", "join_date": datetime.now() - timedelta(days=30)},
     ]
 
     user_objs = []
@@ -27,82 +28,87 @@ def create_users():
     return user_objs
 
 
+
 # ------------------------- Create Levels & Courses -------------------------
 def create_levels_and_courses():
     levels = ["Beginner", "Intermediate", "Advanced"]
-    level_objs = [Level.objects.create(levelName=l) for l in levels]
+    level_objs = {name: Level.objects.get_or_create(levelName=name)[0] for name in levels}
 
-    courses = [
-        {"courseName": "Python Basics", "description": "Learn Python from scratch", "level": level_objs[0]},
-        {"courseName": "Machine Learning", "description": "ML basics", "level": level_objs[1]},
-        {"courseName": "Django Web Development", "description": "Build web apps using Django", "level": level_objs[2]},
+    courses_data = [
+        {"courseName": "Python Basics", "description": "Learn Python from scratch", "level": level_objs["Beginner"]},
+        {"courseName": "Machine Learning", "description": "ML basics", "level": level_objs["Intermediate"]},
+        {"courseName": "Django Web Development", "description": "Build web apps using Django", "level": level_objs["Advanced"]},
     ]
-    course_objs = [Course.objects.create(**c) for c in courses]
+
+    course_objs = []
+    for data in courses_data:
+        course, created = Course.objects.update_or_create(
+            courseName=data["courseName"],
+            defaults={"description": data["description"], "level": data["level"], "created_at": now()},
+        )
+        course_objs.append(course)
 
     print(f"✅ Created {len(level_objs)} levels & {len(course_objs)} courses.")
     return course_objs
 
 
-# ------------------------- Create Teachers -------------------------
 def create_teachers(users):
     teachers = [Teacher.objects.create(user=u, name=u.username) for u in users if u.role == "teacher"]
+    
+    if not teachers:
+        print("⚠️ No teachers created! Check user roles.")
+
     print(f"✅ Created {len(teachers)} teachers.")
     return teachers
 
 
-# ------------------------- Create Course Sessions (with Mock Student) -------------------------
-def create_course_sessions(courses, teachers):
-    # Create a mock student
-    mock_student = Student.objects.create(user=User.objects.first(), name="Mock Student")
 
-    sessions = []
-    for i in range(1, 6):  # Create 5 sessions
-        session = CourseSession.objects.create(
-            course=random.choice(courses),
-            teacher=random.choice(teachers),
-            student=mock_student,  # Assign mock student
-            session_date=datetime.now() + timedelta(days=i),
-            total_quota=20,
-            start_time="10:00",
-            end_time="12:00",
-        )
-        sessions.append(session)
+def create_students(users):
+    students = [
+        Student.objects.create(user=u, name=u.username)
+        for u in users
+        if u.role == "user"  # ✅ Since "students" are children of "users"
+    ]
 
-    print(f"✅ Created {len(sessions)} course sessions with a mock student.")
-    return sessions, mock_student
-
-
-# ------------------------- Create Students & Assign to Sessions -------------------------
-def create_students(users, course_sessions, mock_student):
-    students = []
-
-    for u in users:
-        if u.role == "student":
-            student = Student.objects.create(
-                user=u, 
-                name=u.username
-            )
-
-            if course_sessions:
-                assigned_sessions = random.sample(course_sessions, k=random.randint(1, len(course_sessions)))
-                
-                # Assuming Many-to-Many relationship exists
-                student.sessions.set(assigned_sessions)  
-
-                # Replace the mock student in assigned sessions
-                for session in assigned_sessions:
-                    if session.student == mock_student:
-                        session.student = student
-                        session.save()
-
-            students.append(student)
-
-    print(f"✅ Created {len(students)} students and replaced mock students in course sessions.")
+    print(f"✅ Created {len(students)} students.")
     return students
 
+def create_course_sessions(courses, teachers, students):
+    if not teachers:
+        print("⚠️ No teachers available! Skipping session creation.")
+        return []
+
+    sessions = []
+
+    for student in students:
+        num_sessions = random.randint(1, 3)  # Each student gets 1 to 3 sessions
+        for _ in range(num_sessions):
+            session = CourseSession.objects.create(
+                course=random.choice(courses),
+                teacher=random.choice(teachers),  # ✅ Safe because teachers exist
+                student=student,  
+                session_date=datetime.now() + timedelta(days=random.randint(1, 30)),
+                total_quota=1,
+                start_time="10:00",
+                end_time="12:00",
+            )
+            sessions.append(session)
+
+    print(f"✅ Created {len(sessions)} unique course sessions.")
+    return sessions
 
 
-# ------------------------- Create Attendance Records -------------------------
+# ------------------------- Assign Students to Course Sessions -------------------------
+def assign_students_to_sessions(students, sessions):
+    for student in students:
+        assigned_sessions = random.sample(sessions, k=random.randint(1, len(sessions)))
+        student.sessions.set(assigned_sessions)  # Assign Many-to-Many sessions
+        student.save()
+
+    print(f"✅ Assigned students to sessions.")
+
+
+# ------------------------- Create Attendance -------------------------
 def create_attendance(sessions, teachers, students):
     attendance_objs = [
         Attendance.objects.create(
@@ -169,9 +175,9 @@ def create_certificates(users, courses):
 def populate_database():
     users = create_users()
     courses = create_levels_and_courses()
-    teachers = create_teachers(users)  
-    sessions, mock_student = create_course_sessions(courses, teachers)  # Create course sessions with mock student
-    students = create_students(users, sessions, mock_student)  # Replace mock student with real ones
+    teachers = create_teachers(users)
+    students = create_students(users)  # ✅ Create students first
+    sessions = create_course_sessions(courses, teachers, students)  # ✅ Create unique sessions per student
     create_attendance(sessions, teachers, students)
     create_storage()
     create_receipts(students, sessions)

@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from api.models import CourseSession
+from api.models.attendance import Attendance
 from .course_serializers import CourseSerializer
 from .teacher_serializers import TeacherSerializer
 # from .student_serializers import StudentSerializer
@@ -24,3 +25,20 @@ class CourseSessionListSerializer(serializers.ModelSerializer):
     class Meta:
         model = CourseSession
         fields = ["courseName"]  # ✅ Returns only courseName
+
+class CourseProgressSerializer(serializers.ModelSerializer):
+    totalClasses = serializers.SerializerMethodField()
+    attendedClasses = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Course
+        fields = ["id", "title", "description", "totalClasses", "attendedClasses", "startDate", "endDate"]
+
+    def get_totalClasses(self, obj):
+        return obj.sessions.count()
+
+    def get_attendedClasses(self, obj):
+        child_id = self.context.get("child_id")
+        if child_id:
+            return Attendance.objects.filter(session__course=obj, student_id=child_id, attended=True).count()
+        return 0
