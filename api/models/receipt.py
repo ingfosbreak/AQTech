@@ -4,10 +4,8 @@ from .session import CourseSession
 
 class Receipt(models.Model):
     PAYMENT_METHOD_CHOICES = [
-        ('Cash', 'Cash'),
         ('Credit Card', 'Credit Card'),
-        ('Bank Transfer', 'Bank Transfer'),
-        ('E-Wallet', 'E-Wallet'),
+        ('Promptpay', 'Promptpay'),
     ]
 
     student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name="receipts")
@@ -15,3 +13,4 @@ class Receipt(models.Model):
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     payment_date = models.DateTimeField(auto_now_add=True)
     payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES)
+    receipt_url = models.URLField(null=True, blank=True)
