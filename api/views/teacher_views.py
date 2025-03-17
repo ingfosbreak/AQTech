@@ -4,7 +4,8 @@ from rest_framework import status
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from api.permissions import IsAdmin
 from api.models import User, Teacher
-from api.serializers import TeacherSerializer
+from api.serializers import TeacherSerializer, UserSerializer
+from django.db import transaction
 
 class TeacherCreateView(APIView):
     # authentication_classes = [JWTAuthentication]
@@ -40,6 +41,53 @@ class TeacherCreateView(APIView):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class CreateUserTeacherView(APIView):
+    # authentication_classes = [JWTAuthentication]
+    # permission_classes = [IsAdmin]
+
+    @transaction.atomic
+    def post(self, request):
+        user_data = {
+            "first_name": request.data.get("first_name"),
+            "last_name": request.data.get("last_name"),
+            "username": request.data.get("username"),
+            "password": request.data.get("password"),
+            "contact": request.data.get("contact"),
+            "role": "teacher"  # Ensure the user is always a teacher
+        }
+
+        user_serializer = UserSerializer(data=user_data)
+        if user_serializer.is_valid():
+            user = user_serializer.save()
+
+            # Prevent duplicate teacher assignment
+            if Teacher.objects.filter(user_id=user.id).exists():
+                transaction.set_rollback(True)
+                return Response(
+                    {"user": "This user is already assigned as a teacher."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            teacher_data = {"user": user.id, "name": f"{user.first_name} {user.last_name}"}
+            teacher_serializer = TeacherSerializer(data=teacher_data)
+
+            # Create Teacher entry
+            if teacher_serializer.is_valid():
+                teacher_serializer.save()
+
+                return Response(
+                    {
+                        "message": "user created"
+                    },
+                    status=status.HTTP_201_CREATED,
+                )
+
+            transaction.set_rollback(True)
+            return Response(teacher_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response(user_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
 
 class TeacherListView(APIView):
     # authentication_classes = [JWTAuthentication]
