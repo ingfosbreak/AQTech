@@ -6,6 +6,7 @@ from django.http import HttpResponse
 from rest_framework import status
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
+from datetime import datetime
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
@@ -15,9 +16,11 @@ class CreatePaymentIntentView(APIView):
             data = request.data
             amount = data.get("amount")  # Amount in cents
             currency = data.get("currency", "thb")  # Default to THB
+            date = datetime.strptime(data.get("date"), "%Y-%m-%dT%H:%M:%S.%fZ").date()
             metadata = {
                 "student_id": data.get("student_id"),  # Store student ID
                 "course_id": data.get("course_id"),  # Store purchased course
+                "date": date,
             }
 
             # Create PaymentIntent

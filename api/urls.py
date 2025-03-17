@@ -7,7 +7,7 @@ from api.views.session_views import SessionProgressView
 from api.views.student_views import AddStudentView, UserStudentListView
 from api.views.user_views import ProfileView
 from api.views.teacher_views import CreateUserTeacherView
-from api.views.student_views import AddStudentView, StudentDetailView
+from api.views.student_views import AddStudentView, StudentDetailView, StudentUsernameListView
 from api.views import CreatePaymentIntentView, StripeWebhookAPIView
 # from api.views.user_views import StaffUserView, UserUpdateView
 
@@ -25,6 +25,7 @@ urlpatterns = [
     path('students/create/', StudentCreateView.as_view(), name="student-create"),
     path("students/add/<int:user_id>/", AddStudentView.as_view(), name="add-student"),
     path('students/', StudentListView.as_view(), name="student-list"),
+    path('studentsreforge/', StudentUsernameListView.as_view(), name="student-list-reforged"),
     path('students/<int:pk>', StudentDetailView.as_view(), name="student-detail"),
     path('teachers/create/', CreateUserTeacherView.as_view(), name="teacher-create"),
     path('teachers/', TeacherListView.as_view(), name="teacher-list"),
