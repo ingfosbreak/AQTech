@@ -4,4 +4,4 @@ from .student_views import StudentCreateView, StudentListView
 from .teacher_views import TeacherCreateView, TeacherListView, CreateUserTeacherView
 from .session_views import SessionView
 from .static_views import CombinedCountView, PieChartStaticView
-from .payments_views import CreatePaymentIntentView
+from .payments_views import CreatePaymentIntentView, StripeWebhookAPIView
