@@ -14,6 +14,20 @@ class CourseListView(ListAPIView):
     queryset = Course.objects.all()
     serializer_class = CourseSerializer
 
+class CourseDetailView(APIView):
+    # authentication_classes = [JWTAuthentication]
+    # permission_classes = [IsAdmin]
+
+    def get(self, request, pk):
+        try:
+            storage = Course.objects.get(pk=pk)
+        except Course.DoesNotExist:
+            return Response({"error": "Course not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+        serializer = CourseSerializer(storage)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+
 class CourseCreateView(APIView):
     def post(self, request, *args, **kwargs):
         # Ensure `levelId` is present in the request data

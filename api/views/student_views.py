@@ -45,6 +45,19 @@ class StudentListView(APIView):
         students = Student.objects.all()
         serializer = StudentListSerializer(students, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+class StudentDetailView(APIView):
+    # authentication_classes = [JWTAuthentication]
+    # permission_classes = [IsAdmin]
+
+    def get(self, request, pk):
+        try:
+            storage = Student.objects.get(pk=pk)
+        except Student.DoesNotExist:
+            return Response({"error": "Student not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+        serializer = StudentSerializer(storage)
+        return Response(serializer.data, status=status.HTTP_200_OK)
     
 class AddStudentView(APIView):
     def post(self, request, user_id):
