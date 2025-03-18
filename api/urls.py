@@ -3,7 +3,7 @@ from django.urls import path
 # from api.views.storage_views import StorageListView, StorageDetailView
 from api.views import StorageListView, StorageDetailView, StaffUserView, UserUpdateView, UserDetailView, UserListView, StudentCreateView, StudentListView, TeacherCreateView, TeacherListView, SessionView, UserInfoView, VerifyTokenView, CombinedCountView, PieChartStaticView
 from api.views.course_views import CompletedCoursesView, CourseCreateView, CourseListView, CourseDetailView
-from api.views.session_views import SessionProgressView
+from api.views.session_views import SessionProgressDetailView, SessionProgressView
 from api.views.student_views import AddStudentView, UserStudentListView
 from api.views.user_views import ProfileView
 from api.views.teacher_views import CreateUserTeacherView, TeacherUsernameListView
@@ -36,6 +36,7 @@ urlpatterns = [
     path('teachersreforge/', TeacherUsernameListView.as_view(), name="teacher-list-reforged"),
     path('sessions/create/', SessionView.as_view(), name="session-create"),
     path("sessions/progress/", SessionProgressView.as_view(), name="session-progress"),
+    path("session-detail/", SessionProgressDetailView.as_view(), name="session-detail"),
     path("static/count/", CombinedCountView.as_view(), name="combined-count"),
     path("static/pie/", PieChartStaticView.as_view(), name="pie-count"),
     path('courses/', CourseListView.as_view(), name='course-list'),  # GET /courses/

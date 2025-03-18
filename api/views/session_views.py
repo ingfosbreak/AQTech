@@ -3,6 +3,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_simplejwt.authentication import JWTAuthentication
+from api.models.attendance import Attendance
 from api.models.student import Student
 from api.permissions import IsAdmin
 from api.models import CourseSession
@@ -81,5 +82,52 @@ class SessionProgressView(APIView):
                 "startDate": session.session_date,
                 "endDate": session.session_date + timedelta(weeks=10),
             })
+
+        return Response(session_data, status=status.HTTP_200_OK)
+
+class SessionProgressDetailView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        if not request.user.is_authenticated:
+            return Response({"error": "Authentication credentials were not provided."}, status=status.HTTP_401_UNAUTHORIZED)
+
+        student_id = request.GET.get("studentId")
+        session_id = request.GET.get("sessionId")
+
+        if not student_id or not session_id:
+            return Response({"error": "studentId and sessionId are required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Ensure the student exists and belongs to the logged-in user
+        student = get_object_or_404(Student, id=student_id, user=request.user)
+
+        # Get the specific session
+        session = get_object_or_404(CourseSession, id=session_id, student=student)
+
+        # Fetch all attendance records for this session and student
+        attendance_records = Attendance.objects.filter(session=session, student=student).order_by("attendance_date")
+
+        # Format attendance data
+        attendance_data = [
+            {
+                "attendanceDate": record.attendance_date,
+                "status": record.status,
+                "checkedDate": record.checked_date,
+            }
+            for record in attendance_records
+        ]
+
+        # Prepare session details
+        session_data = {
+            "id": session.id,
+            "title": session.course.courseName,
+            "description": session.course.description,
+            "totalClasses": session.total_quota,
+            "attendedClasses": session.attendances.filter(student=student, status="present").count(),
+            "startDate": session.session_date,
+            "endDate": session.session_date + timedelta(weeks=10),
+            "attendanceRecords": attendance_data,  # ✅ List of all attendance records
+        }
 
         return Response(session_data, status=status.HTTP_200_OK)
