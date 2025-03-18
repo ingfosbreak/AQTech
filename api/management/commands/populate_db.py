@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from django.contrib.auth import get_user_model
 from django.utils.timezone import now
 from api.models import (
-    User, Teacher, Student, Level, Course, CourseSession, 
+    User, Teacher, Student, Type, Course, CourseSession, 
     Attendance, Receipt, Certificate, Storage
 )
 
@@ -29,26 +29,27 @@ def create_users():
 
 
 
-# ------------------------- Create Levels & Courses -------------------------
-def create_levels_and_courses():
-    levels = ["Beginner", "Intermediate", "Advanced"]
-    level_objs = {name: Level.objects.get_or_create(levelName=name)[0] for name in levels}
+# ------------------------- Create Types & Courses -------------------------
+def create_types_and_courses():
+    types = ["AquaKids", "Playsound", "Other"]
+    type_objs = {name: Type.objects.get_or_create(typeName=name)[0] for name in types}
 
     courses_data = [
-        {"courseName": "Python Basics", "description": "Learn Python from scratch", "level": level_objs["Beginner"]},
-        {"courseName": "Machine Learning", "description": "ML basics", "level": level_objs["Intermediate"]},
-        {"courseName": "Django Web Development", "description": "Build web apps using Django", "level": level_objs["Advanced"]},
+        {"courseName": "Swiming baby class", "description": "Let learn swimming together!", "type": type_objs["AquaKids"]},
+        {"courseName": "Begining to be pianist", "description": "Play and Learn about piano", "type": type_objs["Playsound"]},
+        {"courseName": "Taekwando class", "description": "Pratice Pratice Practice", "type": type_objs["Other"]},
+        {"courseName": "Play Dough class", "description": "Build somthing creative and having fun together", "type": type_objs["Other"]},
     ]
 
     course_objs = []
     for data in courses_data:
         course, created = Course.objects.update_or_create(
             courseName=data["courseName"],
-            defaults={"description": data["description"], "level": data["level"], "created_at": now()},
+            defaults={"description": data["description"], "type": data["type"], "created_at": now()},
         )
         course_objs.append(course)
 
-    print(f"✅ Created {len(level_objs)} levels & {len(course_objs)} courses.")
+    print(f"✅ Created {len(type_objs)} Types & {len(course_objs)} courses.")
     return course_objs
 
 
@@ -174,7 +175,7 @@ def create_certificates(users, courses):
 # ------------------------- Run All Functions -------------------------
 def populate_database():
     users = create_users()
-    courses = create_levels_and_courses()
+    courses = create_types_and_courses()
     teachers = create_teachers(users)
     students = create_students(users)  # ✅ Create students first
     sessions = create_course_sessions(courses, teachers, students)  # ✅ Create unique sessions per student

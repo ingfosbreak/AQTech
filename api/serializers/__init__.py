@@ -4,7 +4,7 @@ from .student_serializers import StudentSerializer
 from .teacher_serializers import TeacherSerializer
 from .session_serializers import CourseSessionSerializer
 from .receipt_serializers import ReceiptSerializer
-from .level_serializers import LevelSerializer
+from .type_serializers import TypeSerializer
 from .course_serializers import CourseSerializer
 from .certificate_serizlizers import CertificateSerializer
 from .attendance_serializers import AttendanceSerializer

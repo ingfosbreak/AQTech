@@ -1,9 +1,9 @@
 from rest_framework import serializers
-from api.models import Course, Level
+from api.models import Course, Type
 
 class CourseSerializer(serializers.ModelSerializer):
-    level = serializers.PrimaryKeyRelatedField(queryset=Level.objects.all())  # Accepts levelId
+    type = serializers.PrimaryKeyRelatedField(queryset=Type.objects.all())  # Accepts typeId
 
     class Meta:
         model = Course
-        fields = ["id", "courseName", "description", "level", "quota", "created_at"]
+        fields = ["id", "courseName", "description", "type", "quota", "created_at"]
