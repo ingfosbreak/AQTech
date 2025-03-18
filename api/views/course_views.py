@@ -36,7 +36,7 @@ class CourseCreateView(APIView):
             return Response({"error": "typeId is required"}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            type = type.objects.get(id=type_id)  # Fetch the type by ID
+            type = Type.objects.get(id=type_id)  # Fetch the type by ID
         except type.DoesNotExist:
             return Response({"error": "Invalid type ID"}, status=status.HTTP_400_BAD_REQUEST)
 
