@@ -68,6 +68,28 @@ class StudentUsernameListView(APIView):
         # Return the list of students with their usernames as a JSON response
         return JsonResponse(student_list, safe=False, status=status.HTTP_200_OK)
 
+class StudentCertificateListView(APIView):
+    # authentication_classes = [JWTAuthentication]
+    # permission_classes = [IsAdmin]
+
+    def get(self, request):
+        students = Student.objects.all()
+
+        # Map the student objects to a list of dictionaries, including the username
+        student_list = [
+            {
+                'id': student.id,
+                'name': student.name,
+                'birthdate': student.birthdate,
+                'username': student.user.username,  # Get username from related User model
+                'user_id': student.user.id
+            }
+            for student in students
+        ]
+
+        # Return the list of students with their usernames as a JSON response
+        return JsonResponse(student_list, safe=False, status=status.HTTP_200_OK)
+
 
 class StudentDetailView(APIView):
     # authentication_classes = [JWTAuthentication]

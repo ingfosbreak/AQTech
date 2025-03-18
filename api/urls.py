@@ -7,9 +7,10 @@ from api.views.session_views import SessionProgressView
 from api.views.student_views import AddStudentView, UserStudentListView
 from api.views.user_views import ProfileView
 from api.views.teacher_views import CreateUserTeacherView, TeacherUsernameListView
-from api.views.student_views import AddStudentView, StudentDetailView, StudentUsernameListView
+from api.views.student_views import AddStudentView, StudentDetailView, StudentUsernameListView, StudentCertificateListView
 from api.views import CreatePaymentIntentView, StripeWebhookAPIView
 from api.views.storage_views import StorageChangeImage
+from api.views.certificate_views import CerificateListView
 # from api.views.user_views import StaffUserView, UserUpdateView
 
 urlpatterns = [
@@ -28,6 +29,7 @@ urlpatterns = [
     path("students/add/<int:user_id>/", AddStudentView.as_view(), name="add-student"),
     path('students/', StudentListView.as_view(), name="student-list"),
     path('studentsreforge/', StudentUsernameListView.as_view(), name="student-list-reforged"),
+    path('studentscertificate/', StudentCertificateListView.as_view(), name="student-list-certificate"),
     path('students/<int:pk>', StudentDetailView.as_view(), name="student-detail"),
     path('teachers/create/', CreateUserTeacherView.as_view(), name="teacher-create"),
     path('teachers/', TeacherListView.as_view(), name="teacher-list"),
@@ -41,7 +43,7 @@ urlpatterns = [
     path('courses/create/', CourseCreateView.as_view(), name='course-create'),  # POST /courses/create/
     path("courses/completed/", CompletedCoursesView.as_view(), name="completed-courses"),
     path("profile/", ProfileView.as_view(), name="profile"),
-
+    path("certificates-upload/", CerificateListView.as_view(), name="certificate-upload"),
     path('create-payment-intent/', CreatePaymentIntentView.as_view(), name='create-payment-intent'),
     path("webhook/stripe/", StripeWebhookAPIView.as_view(), name="stripe-webhook"),
 ]
