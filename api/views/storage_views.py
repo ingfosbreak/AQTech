@@ -8,6 +8,10 @@ from api.serializers import StorageSerializer
 # from api.serializers.storage_serializers import StorageSerializer
 from api.services import supabase
 from django.conf import settings
+from django.shortcuts import get_object_or_404
+from urllib.parse import urlparse
+import time
+import uuid
 
 class StorageListView(APIView):
     # authentication_classes = [JWTAuthentication]
@@ -24,7 +28,8 @@ class StorageListView(APIView):
         
         # Handle file upload if a file is present
         if file:
-            file_path = f"images/{file.name}"  # File path in Supabase bucket
+            unique_filename = f"{int(time.time())}_{uuid.uuid4().hex[:8]}_{file.name}"
+            file_path = f"images/{unique_filename}"  # File path in Supabase bucket
             file_content = file.read()
             try:
                 # Upload to Supabase
@@ -49,6 +54,51 @@ class StorageListView(APIView):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+class StorageChangeImage(APIView):
+    def patch(self, request, pk):
+
+        storage_item = get_object_or_404(Storage, pk=pk)  # Get the storage object by pk
+        file = request.FILES.get('storage_image')
+
+        if not file:
+            return Response({"error": "No file uploaded"}, status=status.HTTP_400_BAD_REQUEST)
+
+        old_image_url = storage_item.storage_image
+        unique_filename = f"{int(time.time())}_{uuid.uuid4().hex[:8]}_{file.name}"
+        file_path = f"images/{unique_filename}"  # File path in Supabase bucket
+        file_content = file.read()
+
+        try:
+            # Upload file to Supabase
+            res = supabase.storage.from_("AQKids").upload(
+                file=file_content,
+                path=file_path
+            )
+
+            # Get the public URL of the uploaded file
+            file_url = supabase.storage.from_("AQKids").get_public_url(
+                res.__getattribute__("path")
+            )
+            
+            if old_image_url:
+                parsed_url = urlparse(old_image_url)  # Parse URL to extract file path
+                old_file_path = parsed_url.path.lstrip("/")  # Remove leading slash
+                supabase.storage.from_("AQKids").remove([old_file_path])
+
+            # Update storage object
+            storage_item.storage_image = file_url
+            storage_item.save()
+
+            return Response({
+                "id": storage_item.id,
+                "title": storage_item.title,
+                "storage_image": file_url,
+                "quantity": storage_item.quantity
+            }, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
 
 class StorageDetailView(APIView):

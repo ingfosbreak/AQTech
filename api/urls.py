@@ -9,12 +9,14 @@ from api.views.user_views import ProfileView
 from api.views.teacher_views import CreateUserTeacherView, TeacherUsernameListView
 from api.views.student_views import AddStudentView, StudentDetailView, StudentUsernameListView
 from api.views import CreatePaymentIntentView, StripeWebhookAPIView
+from api.views.storage_views import StorageChangeImage
 # from api.views.user_views import StaffUserView, UserUpdateView
 
 urlpatterns = [
     # path('', Home.as_view()),
     path('storages/', StorageListView.as_view(), name='storage-list'),
     path('storages/<int:pk>/', StorageDetailView.as_view(), name='storage-detail'),
+    path('storages/image/<int:pk>', StorageChangeImage.as_view(), name="storage-image"),
     path('user/create/', StaffUserView.as_view(), name='user-create'),
     path('user/update/', UserUpdateView.as_view(), name='user-update'),
     path('user/info/', UserInfoView.as_view(), name="user-info"),
