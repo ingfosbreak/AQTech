@@ -56,20 +56,20 @@ class AttendanceHeatmapView(APIView):
         course_type = request.GET.get("courseType", "All")
 
         # Define time slot ranges
-        time_slots = {
-            "9am": (time(9, 0), time(11, 0)),
-            "11am": (time(11, 0), time(13, 0)),
-            "1pm": (time(13, 0), time(15, 0)),
-            "3pm": (time(15, 0), time(17, 0)),
-            "5pm": (time(17, 0), time(19, 0)),
-        }
+        time_slots = {}
+        for hour in range(9, 18):  # From 9am to 5pm
+            start_time = time(hour, 0)
+            end_time = time(hour + 1, 0)
+            label = f"{hour}am" if hour < 12 else f"{hour - 12}pm" if hour != 12 else "12pm"
+            time_slots[label] = (start_time, end_time)
+
         days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
         # Filter sessions based on course type
         if course_type != "All":
             sessions = CourseSession.objects.filter(course__type__typeName=course_type)
         else:
-            sessions = CourseSession.objects.all()  # ✅ Ensure `sessions` is always assigned
+            sessions = CourseSession.objects.all()
 
         # Prepare empty heatmap structure
         heatmap_data = {day: {slot: 0 for slot in time_slots.keys()} for day in days}
@@ -85,17 +85,26 @@ class AttendanceHeatmapView(APIView):
                 continue  # Skip if no students
 
             for slot, (start_time, end_time) in time_slots.items():
-                # Count students who attended in this time slot
+                # Adjust filtering for overlapping time slots
                 attended_students = Attendance.objects.filter(
                     session=session,
                     status="present",
-                    start_time__gte=start_time,
-                    end_time__lte=end_time,
+                ).filter(
+                    # Check if the attendance overlaps with the time slot
+                    start_time__lt=end_time,  # Start time before end of the slot
+                    end_time__gt=start_time,  # End time after the start of the slot
                 ).count()
 
                 # Calculate attendance percentage
-                attendance_percentage = (attended_students / total_students) * 100
-                heatmap_data[session_day][slot] = round(attendance_percentage, 2)
+                if total_students > 0:
+                    attendance_percentage = (attended_students / total_students) * 100
+                    rounded_percentage = round(attendance_percentage, 2)
+
+                    # Convert to integer if it's a whole number
+                    if rounded_percentage.is_integer():
+                        heatmap_data[session_day][slot] = int(rounded_percentage)
+                    else:
+                        heatmap_data[session_day][slot] = rounded_percentage
 
         return Response(heatmap_data, status=status.HTTP_200_OK)
 

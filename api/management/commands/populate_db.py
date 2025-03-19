@@ -111,6 +111,7 @@ def assign_students_to_sessions(students, sessions):
 
 # ------------------------- Create Attendance -------------------------
 def create_attendance(sessions, teachers, students):
+    # Create Attendance records with random checked_date of either 11:00 AM or 12:00 PM
     attendance_objs = [
         Attendance.objects.create(
             session=random.choice(sessions),
@@ -118,7 +119,8 @@ def create_attendance(sessions, teachers, students):
             student=random.choice(students),
             status="Present",
             attendance_date=datetime.now(),
-            checked_date=datetime.now(),
+            # Randomly assign checked_date to either 11:00 AM or 12:00 PM
+            checked_date=datetime.now().replace(hour=random.choice([18, 24]), minute=0, second=0, microsecond=0),
             start_time="10:00",
             end_time="12:00",
         )
