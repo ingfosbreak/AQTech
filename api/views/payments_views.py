@@ -127,6 +127,8 @@ def create_course_session_and_attendance(metadata):
                     student=student,
                     attendance_date=course_session.session_date + timedelta(weeks=i),
                     status="absent",  # Default status
+                    end_time=end_time,
+                    start_time=start_time,
                 )
                 for i in range(course_session.total_quota)
             ]

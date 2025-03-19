@@ -11,7 +11,7 @@ from api.views.student_views import AddStudentView, StudentDetailView, StudentUs
 from api.views import CreatePaymentIntentView, StripeWebhookAPIView
 from api.views.storage_views import StorageChangeImage
 from api.views.certificate_views import CerificateListView
-from api.views.attendance_views import AttendanceView
+from api.views.attendance_views import AttendanceView, AttendanceModifyView
 # from api.views.user_views import StaffUserView, UserUpdateView
 
 urlpatterns = [
@@ -47,5 +47,6 @@ urlpatterns = [
     path("certificates-upload/", CerificateListView.as_view(), name="certificate-upload"),
     path('create-payment-intent/', CreatePaymentIntentView.as_view(), name='create-payment-intent'),
     path("webhook/stripe/", StripeWebhookAPIView.as_view(), name="stripe-webhook"),
-    path("attendance-create/", AttendanceView.as_view(), name="attendance-create" )
+    path("attendance-create/", AttendanceView.as_view(), name="attendance-create"),
+    path("attendance-all/", AttendanceModifyView.as_view(), name="attendance-modify")
 ]
