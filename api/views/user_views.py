@@ -43,6 +43,7 @@ class UserInfoView(APIView):
         authenticated_user = request.user
        
         return Response({
+            "id": authenticated_user.id,
             "username": authenticated_user.username,
             "role": authenticated_user.role,  
         })

@@ -119,6 +119,8 @@ def create_attendance(sessions, teachers, students):
             status="Present",
             attendance_date=datetime.now(),
             checked_date=datetime.now(),
+            start_time="10:00",
+            end_time="12:00",
         )
         for _ in range(5)
     ]
