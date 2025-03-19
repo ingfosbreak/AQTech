@@ -3,5 +3,5 @@ from .user_views import StaffUserView, UserUpdateView, UserInfoView, VerifyToken
 from .student_views import StudentCreateView, StudentListView
 from .teacher_views import TeacherCreateView, TeacherListView, CreateUserTeacherView
 from .session_views import SessionView
-from .static_views import CombinedCountView, PieChartStaticView
+from .static_views import CombinedCountView, PieChartStaticView, AttendanceLogView
 from .payments_views import CreatePaymentIntentView, StripeWebhookAPIView

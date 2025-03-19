@@ -4,6 +4,7 @@ from django.urls import path
 from api.views import StorageListView, StorageDetailView, StaffUserView, UserUpdateView, UserDetailView, UserListView, StudentCreateView, StudentListView, TeacherCreateView, TeacherListView, SessionView, UserInfoView, VerifyTokenView, CombinedCountView, PieChartStaticView
 from api.views.course_views import CompletedCoursesView, CourseCreateView, CourseListView, CourseDetailView
 from api.views.session_views import SessionProgressDetailView, SessionProgressView
+from api.views.static_views import AttendanceHeatmapView, AttendanceLogView
 from api.views.student_views import AddStudentView, UserStudentListView
 from api.views.user_views import ProfileView
 from api.views.teacher_views import CreateUserTeacherView, TeacherUsernameListView
@@ -49,5 +50,7 @@ urlpatterns = [
     path('create-payment-intent/', CreatePaymentIntentView.as_view(), name='create-payment-intent'),
     path("webhook/stripe/", StripeWebhookAPIView.as_view(), name="stripe-webhook"),
     path("attendance-create/", AttendanceView.as_view(), name="attendance-create"),
-    path("attendance-all/", AttendanceModifyView.as_view(), name="attendance-modify")
+    path("attendance-all/", AttendanceModifyView.as_view(), name="attendance-modify"),
+    path("attendance-heatmap/", AttendanceHeatmapView.as_view(), name="attendance-heatmap"),
+    path("attendance-log/", AttendanceLogView.as_view(), name="attendance-log"),
 ]
