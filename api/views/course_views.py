@@ -6,7 +6,7 @@ from api.serializers.course_serializers import CourseSerializer
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
-from api.models import Course, Level
+from api.models import Course, Type
 from api.serializers.session_serializers import CourseSessionSerializer
 from rest_framework.permissions import IsAuthenticated
 
@@ -14,20 +14,34 @@ class CourseListView(ListAPIView):
     queryset = Course.objects.all()
     serializer_class = CourseSerializer
 
+class CourseDetailView(APIView):
+    # authentication_classes = [JWTAuthentication]
+    # permission_classes = [IsAdmin]
+
+    def get(self, request, pk):
+        try:
+            storage = Course.objects.get(pk=pk)
+        except Course.DoesNotExist:
+            return Response({"error": "Course not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+        serializer = CourseSerializer(storage)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+
 class CourseCreateView(APIView):
     def post(self, request, *args, **kwargs):
-        # Ensure `levelId` is present in the request data
-        level_id = request.data.get("levelId")
-        if not level_id:
-            return Response({"error": "levelId is required"}, status=status.HTTP_400_BAD_REQUEST)
+        # Ensure `typeId` is present in the request data
+        type_id = request.data.get("typeId")
+        if not type_id:
+            return Response({"error": "typeId is required"}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            level = Level.objects.get(id=level_id)  # Fetch the Level by ID
-        except Level.DoesNotExist:
-            return Response({"error": "Invalid level ID"}, status=status.HTTP_400_BAD_REQUEST)
+            type = Type.objects.get(id=type_id)  # Fetch the type by ID
+        except type.DoesNotExist:
+            return Response({"error": "Invalid type ID"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Attach level to the request data and validate the serializer
-        request.data["level"] = level.id  # Attach the level ID to the data
+        # Attach type to the request data and validate the serializer
+        request.data["type"] = type.id  # Attach the type ID to the data
         serializer = CourseSerializer(data=request.data)
 
         if serializer.is_valid():

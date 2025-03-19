@@ -6,6 +6,7 @@ from api.permissions import IsAdmin
 from api.models import User, Teacher
 from api.serializers import TeacherSerializer, UserSerializer
 from django.db import transaction
+from django.http import JsonResponse
 
 class TeacherCreateView(APIView):
     # authentication_classes = [JWTAuthentication]
@@ -97,4 +98,24 @@ class TeacherListView(APIView):
         teachers = Teacher.objects.all()
         serializer = TeacherSerializer(teachers, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+    
+class TeacherUsernameListView(APIView):
+    # authentication_classes = [JWTAuthentication]
+    # permission_classes = [IsAdmin]
+
+    def get(self, request):
+        teachers = Teacher.objects.all()
+
+        # Map the student objects to a list of dictionaries, including the username
+        teacher_list = [
+            {
+                'id': teacher.id,
+                'name': teacher.name,
+                'username': teacher.user.username,  # Get username from related User model
+            }
+            for teacher in teachers
+        ]
+
+        # Return the list of students with their usernames as a JSON response
+        return JsonResponse(teacher_list, safe=False, status=status.HTTP_200_OK)
     

@@ -34,7 +34,7 @@ SECRET_KEY = 'django-insecure-%hjisw!0c0)bs&s9m#0e(#(=g54-#f+q2-d3+p%puk)0=5qrp#
 DEBUG = True
 
 ALLOWED_HOSTS = [
-    'c86b-171-101-123-135.ngrok-free.app',  # Add your ngrok URL
+    '1e1f-171-101-123-41.ngrok-free.app',  # Add your ngrok URL
     'localhost',
     '127.0.0.1',
 ]
@@ -123,7 +123,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Bangkok'
 
 USE_I18N = True
 

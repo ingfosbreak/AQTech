@@ -14,5 +14,7 @@ class Attendance(models.Model):
     student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name="attendances")
     teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE, related_name="attendances")
     attendance_date = models.DateField()
+    start_time = models.TimeField(null=True)
+    end_time = models.TimeField(null=True)
     checked_date = models.DateTimeField(null=True, blank=True)
     

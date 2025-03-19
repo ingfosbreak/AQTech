@@ -7,6 +7,7 @@ from api.models import User, Student
 from api.serializers import StudentSerializer
 from api.serializers.student_serializers import StudentListSerializer
 from rest_framework.permissions import IsAuthenticated
+from django.http import JsonResponse
 
 class StudentCreateView(APIView):
     # authentication_classes = [JWTAuthentication]
@@ -44,6 +45,63 @@ class StudentListView(APIView):
     def get(self, request):
         students = Student.objects.all()
         serializer = StudentListSerializer(students, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+class StudentUsernameListView(APIView):
+    # authentication_classes = [JWTAuthentication]
+    # permission_classes = [IsAdmin]
+
+    def get(self, request):
+        students = Student.objects.all()
+
+        # Map the student objects to a list of dictionaries, including the username
+        student_list = [
+            {
+                'id': student.id,
+                'name': student.name,
+                'birthdate': student.birthdate,
+                'username': student.user.username,  # Get username from related User model
+            }
+            for student in students
+        ]
+
+        # Return the list of students with their usernames as a JSON response
+        return JsonResponse(student_list, safe=False, status=status.HTTP_200_OK)
+
+class StudentCertificateListView(APIView):
+    # authentication_classes = [JWTAuthentication]
+    # permission_classes = [IsAdmin]
+
+    def get(self, request):
+        students = Student.objects.all()
+
+        # Map the student objects to a list of dictionaries, including the username
+        student_list = [
+            {
+                'id': student.id,
+                'name': student.name,
+                'birthdate': student.birthdate,
+                'username': student.user.username,  # Get username from related User model
+                'user_id': student.user.id
+            }
+            for student in students
+        ]
+
+        # Return the list of students with their usernames as a JSON response
+        return JsonResponse(student_list, safe=False, status=status.HTTP_200_OK)
+
+
+class StudentDetailView(APIView):
+    # authentication_classes = [JWTAuthentication]
+    # permission_classes = [IsAdmin]
+
+    def get(self, request, pk):
+        try:
+            storage = Student.objects.get(pk=pk)
+        except Student.DoesNotExist:
+            return Response({"error": "Student not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+        serializer = StudentSerializer(storage)
         return Response(serializer.data, status=status.HTTP_200_OK)
     
 class AddStudentView(APIView):
