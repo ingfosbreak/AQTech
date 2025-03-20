@@ -15,43 +15,91 @@ def create_users():
         {"username": "staff", "password": "admin123", "email": "staff@example.com", "role": "staff", "join_date": datetime.now()},
         {"username": "teacher1", "password": "pass123", "email": "teacher1@example.com", "role": "teacher", "join_date": datetime.now() - timedelta(days=100)},
         {"username": "teacher2", "password": "pass123", "email": "teacher2@example.com", "role": "teacher", "join_date": datetime.now() - timedelta(days=90)},
-        {"username": "parent1", "password": "pass123", "email": "parent1@example.com", "role": "user", "join_date": datetime.now() - timedelta(days=50)},
-        {"username": "parent2", "password": "pass123", "email": "parent2@example.com", "role": "user", "join_date": datetime.now() - timedelta(days=30)},
     ]
+
+    # Generate 10 "user" role accounts
+    for i in range(1, 11):
+        users.append({
+            "username": f"user{i}",
+            "password": "userpass123",
+            "email": f"user{i}@example.com",
+            "role": "user",
+            "join_date": datetime.now() - timedelta(days=i * 10),
+        })
 
     user_objs = []
     for user in users:
-        obj = User.objects.create_user(**user)
+        obj, created = User.objects.update_or_create(
+            username=user["username"],
+            defaults={
+                "email": user["email"],
+                "role": user["role"],
+                "date_joined": user["join_date"],
+            }
+        )
+        obj.set_password(user["password"])
+        obj.save()
         user_objs.append(obj)
 
-    print(f"✅ Created {len(user_objs)} users.")
+    print(f"✅ Created or updated {len(user_objs)} users.")
     return user_objs
 
 
 
-# ------------------------- Create Types & Courses -------------------------
 def create_types_and_courses():
     types = ["AquaKids", "Playsound", "Other"]
     type_objs = {name: Type.objects.get_or_create(typeName=name)[0] for name in types}
-
-    courses_data = [
-        {"courseName": "Swiming baby class", "description": "Let learn swimming together!", "type": type_objs["AquaKids"]},
-        {"courseName": "Begining to be pianist", "description": "Play and Learn about piano", "type": type_objs["Playsound"]},
-        {"courseName": "Taekwando class", "description": "Pratice Pratice Practice", "type": type_objs["Other"]},
-        {"courseName": "Play Dough class", "description": "Build somthing creative and having fun together", "type": type_objs["Other"]},
-    ]
-
+    
+    courses_data = {
+        "AquaKids": [
+            "Swimming Baby Class",
+            "Advanced Aqua Training",
+            "Junior Water Polo",
+            "Aqua Aerobics for Kids",
+            "Deep Dive Basics",
+            "Underwater Exploration",
+            "Freestyle Fundamentals",
+            "Backstroke Basics",
+            "Synchronized Swimming",
+            "Water Safety Training",
+        ],
+        "Playsound": [
+            "Beginning to Be Pianist",
+            "Guitar for Beginners",
+            "Violin Mastery",
+            "Drumming Essentials",
+            "Music Theory Basics",
+            "Jazz Improvisation",
+            "Orchestra Training",
+            "Songwriting Workshop",
+            "Electronic Music Production",
+            "Choral Singing",
+        ],
+        "Other": [
+            "Taekwondo Class",
+            "Play Dough Class",
+            "Beginner Ballet",
+            "Creative Painting",
+            "Drama & Acting",
+            "Chess Strategy",
+            "Robotics Workshop",
+            "Coding for Kids",
+            "Lego Engineering",
+            "Public Speaking",
+        ],
+    }
+    
     course_objs = []
-    for data in courses_data:
-        course, created = Course.objects.update_or_create(
-            courseName=data["courseName"],
-            defaults={"description": data["description"], "type": data["type"], "created_at": now()},
-        )
-        course_objs.append(course)
-
-    print(f"✅ Created {len(type_objs)} Types & {len(course_objs)} courses.")
+    for type_name, courses in courses_data.items():
+        for course_name in courses:
+            course, created = Course.objects.update_or_create(
+                courseName=course_name,
+                defaults={"description": f"This is a {type_name} course.", "type": type_objs[type_name], "created_at": now()},
+            )
+            course_objs.append(course)
+    
+    print(f"✅ Created {len(type_objs)} Types & {len(course_objs)} Courses.")
     return course_objs
-
 
 def create_teachers(users):
     teachers = [Teacher.objects.create(user=u, name=u.username) for u in users if u.role == "teacher"]
@@ -63,16 +111,28 @@ def create_teachers(users):
     return teachers
 
 
-
 def create_students(users):
-    students = [
-        Student.objects.create(user=u, name=u.username)
-        for u in users
-        if u.role == "user"  # ✅ Since "students" are children of "users"
+    student_names = [
+        "Alice", "Bob", "Charlie", "Daisy", "Ethan", "Fiona", "George", "Hannah",
+        "Isaac", "Jack", "Katie", "Leo", "Mia", "Nathan"
     ]
+    
+    students = []
+    name_index = 0  # To keep track of assigned names
+
+    for u in users:
+        if u.role == "user":
+            num_students = 2 if name_index < 10 else 1  # Some users have 2 students
+            for _ in range(num_students):
+                if name_index >= len(student_names):  # Prevent index error
+                    break
+                student = Student.objects.create(user=u, name=student_names[name_index])
+                students.append(student)
+                name_index += 1  # Move to the next name
 
     print(f"✅ Created {len(students)} students.")
     return students
+
 
 def create_course_sessions(courses, teachers, students):
     if not teachers:
@@ -197,8 +257,8 @@ def populate_database():
     sessions = create_course_sessions(courses, teachers, students)  # ✅ Create unique sessions per student
     create_attendance(sessions, teachers, students)
     create_storage()
-    create_receipts(students, sessions)
-    create_certificates(users, courses)
+    # create_receipts(students, sessions)
+    # create_certificates(users, courses)
     print("🎉 Database successfully populated!")
 
 

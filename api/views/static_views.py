@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from django.db.models import Count, DateField
+from django.db.models import Count, Avg
 from api import models
 from api.models import Student, Teacher, CourseSession
 from django.utils.timezone import now
@@ -14,6 +14,9 @@ from api.models.attendance import Attendance
 from api.models import Attendance
 from django.db.models.functions import TruncDate
 from django.db.models.functions import ExtractHour, ExtractWeekDay
+from django.db.models.functions import TruncMonth
+
+from api.models.course import Course
 
 class CombinedCountView(APIView):
     def get(self, request):
@@ -44,8 +47,15 @@ class CombinedCountView(APIView):
 
 class PieChartStaticView(APIView):
     def get(self, request):
-        student_count = Student.objects.aggregate(count=Count('id'))['count']
-        teacher_count = Teacher.objects.aggregate(count=Count('id'))['count']
+        courseType = request.GET.get('courseType', 'All')  # Default to 'All' if no courseType is specified
+        
+        if courseType != 'All':
+            # Assuming Type model has a field named 'typeName'
+            student_count = Student.objects.filter(sessions__course__type__typeName=courseType).distinct().count()
+            teacher_count = Teacher.objects.filter(sessions__course__type__typeName=courseType).distinct().count()
+        else:
+            student_count = Student.objects.count()
+            teacher_count = Teacher.objects.count()
 
         data = [
             {"name": "Student", "value": student_count},
@@ -204,3 +214,62 @@ class RecentAttendanceView(APIView):
                     records[-1]['relativeTime'] = f"{diff.days} days ago"
 
         return Response(records, status=status.HTTP_200_OK)
+    
+class CoursePerformanceView(APIView):
+    def get(self, request):
+        courseType = request.GET.get('courseType', 'All')  # Default to 'All' if no courseType is specified
+
+        # Course Data
+        course_data = []
+        if courseType != 'All':
+            course_data = CourseSession.objects.filter(course__type__typeName=courseType).annotate(
+                month=TruncMonth('session_date')
+            ).values(
+                'month'
+            ).annotate(
+                courses=Count('course'),
+                attendance=Avg('total_quota'),
+                capacity=Count('id')
+            ).order_by('month')
+        else:
+            course_data = CourseSession.objects.annotate(
+                month=TruncMonth('session_date')
+            ).values(
+                'month'
+            ).annotate(
+                courses=Count('course'),
+                attendance=Avg('total_quota'),
+                capacity=Count('id')
+            ).order_by('month')
+
+        # Transform course_data to match frontend's expected structure
+        transformed_course_data = []
+        for item in course_data:
+            transformed_course_data.append({
+                'month': item['month'].strftime('%Y-%m'),  # Format the date
+                'courses': item['courses'],
+                'attendance': item['attendance'],
+                'capacity': item['capacity'],
+            })
+
+        # Course Popularity Data
+        course_popularity_data = []
+        if courseType != 'All':
+            courses = Course.objects.filter(type__typeName=courseType)
+            course_popularity_data = courses.annotate(students=Count('sessions')).values('courseName', 'quota', 'students', 'type__typeName')
+        else:
+            course_popularity_data = Course.objects.annotate(students=Count('sessions')).values('courseName', 'quota', 'students', 'type__typeName')
+
+        # Transform course_popularity_data to match frontend's expected structure
+        transformed_course_popularity_data = []
+        for item in course_popularity_data:
+            transformed_course_popularity_data.append({
+                'name': item['courseName'],
+                'popularity': item['quota'],  # Assuming 'quota' is used as popularity
+                'students': item['students'],
+                'type': item['type__typeName'],
+            })
+
+        return Response({
+            'courseData': transformed_course_data,
+        }, status=status.HTTP_200_OK)

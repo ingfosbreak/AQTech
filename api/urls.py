@@ -4,7 +4,7 @@ from django.urls import path
 from api.views import StorageListView, StorageDetailView, StaffUserView, UserUpdateView, UserDetailView, UserListView, StudentCreateView, StudentListView, TeacherCreateView, TeacherListView, SessionView, UserInfoView, VerifyTokenView, CombinedCountView, PieChartStaticView
 from api.views.course_views import CompletedCoursesView, CourseCreateView, CourseListView, CourseDetailView
 from api.views.session_views import SessionProgressDetailView, SessionProgressView
-from api.views.static_views import AttendanceHeatmapView, AttendanceLogView, RecentAttendanceView
+from api.views.static_views import AttendanceHeatmapView, AttendanceLogView, CoursePerformanceView, RecentAttendanceView
 from api.views.student_views import AddStudentView, UserStudentListView
 from api.views.user_views import ProfileView
 from api.views.teacher_views import CreateUserTeacherView, TeacherUsernameListView
@@ -45,6 +45,7 @@ urlpatterns = [
     path('course/<int:pk>', CourseDetailView.as_view(), name="course-detail"),
     path('courses/create/', CourseCreateView.as_view(), name='course-create'),  # POST /courses/create/
     path("courses/completed/", CompletedCoursesView.as_view(), name="completed-courses"),
+    path('course-performance/', CoursePerformanceView.as_view(), name='course-performance'),
     path("profile/", ProfileView.as_view(), name="profile"),
     path("certificates-upload/", CerificateListView.as_view(), name="certificate-upload"),
     path("certificates-all/", AllCertificate.as_view(), name="certificate-upload"),
