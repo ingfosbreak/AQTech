@@ -4,7 +4,7 @@ from django.urls import path
 from api.views import StorageListView, StorageDetailView, StaffUserView, UserUpdateView, UserDetailView, UserListView, StudentCreateView, StudentListView, TeacherCreateView, TeacherListView, SessionView, UserInfoView, VerifyTokenView, CombinedCountView, PieChartStaticView
 from api.views.course_views import CompletedCoursesView, CourseCreateView, CourseListView, CourseDetailView
 from api.views.session_views import SessionProgressDetailView, SessionProgressView
-from api.views.static_views import AttendanceHeatmapView, AttendanceLogView
+from api.views.static_views import AttendanceHeatmapView, AttendanceLogView, RecentAttendanceView
 from api.views.student_views import AddStudentView, UserStudentListView
 from api.views.user_views import ProfileView
 from api.views.teacher_views import CreateUserTeacherView, TeacherUsernameListView
@@ -55,4 +55,5 @@ urlpatterns = [
     path("attendance-heatmap/", AttendanceHeatmapView.as_view(), name="attendance-heatmap"),
     path("attendance-log/", AttendanceLogView.as_view(), name="attendance-log"),
     path("attendance-update/", UpdateAttendanceStatus.as_view(), name="attendance-update"),
+    path("attendance-recent/", RecentAttendanceView.as_view(), name="attendance-recent"),
 ]

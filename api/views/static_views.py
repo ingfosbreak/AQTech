@@ -148,11 +148,59 @@ class AttendanceLogView(APIView):
             {
                 "id": attendance.id,
                 "name": attendance.student.name,
+                "studentId": attendance.student.id,
                 "course": attendance.session.course.courseName,
                 "courseType": attendance.session.course.type.typeName,
                 "timestamp": localtime(attendance.checked_date).strftime("%Y-%m-%d %H:%M:%S"),  # Updated field
             }
             for attendance in queryset
         ]
+
+        return Response(records, status=status.HTTP_200_OK)
+
+class RecentAttendanceView(APIView):
+    def get(self, request):
+        # Get studentId from query parameters
+        student_id = request.GET.get("studentId")
+        
+        if not student_id:
+            return Response(
+                {"error": "Missing required parameter: studentId"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Fetch last three recent attendance records
+        recent_attendance = (
+            Attendance.objects
+            .filter(student_id=student_id)  # Assuming student_id is correct
+            .order_by("-checked_date")[:3]
+        )
+
+        # Serialize data
+        records = []
+        for record in recent_attendance:
+            # Ensure checked_date is a datetime object and timezone aware
+            checked_date = record.checked_date
+            
+            if checked_date is not None:
+                # Convert to local time if necessary
+                local_checked_date = timezone.localtime(checked_date)
+                
+                # Serialize data
+                records.append({
+                    "timestamp": local_checked_date.strftime("%Y-%m-%d %H:%M:%S"),
+                    "status": record.status
+                })
+
+                # Add relative time labels (e.g., Yesterday, 2 days ago)
+                now = timezone.now()
+                diff = now - local_checked_date
+
+                if diff.days == 0:
+                    records[-1]['relativeTime'] = "Today"
+                elif diff.days == 1:
+                    records[-1]['relativeTime'] = "Yesterday"
+                else:
+                    records[-1]['relativeTime'] = f"{diff.days} days ago"
 
         return Response(records, status=status.HTTP_200_OK)

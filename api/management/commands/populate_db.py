@@ -110,8 +110,20 @@ def assign_students_to_sessions(students, sessions):
 
 
 # ------------------------- Create Attendance -------------------------
+
+# Function to generate a random time between 10 AM and 5 PM
+def random_time():
+    start_time = datetime.strptime("10:00", "%H:%M")
+    end_time = datetime.strptime("17:00", "%H:%M")
+    
+    # Generate a random time within this range
+    random_minutes = random.randint(0, int((end_time - start_time).total_seconds() / 60))
+    random_datetime = start_time + timedelta(minutes=random_minutes)
+    
+    return random_datetime.strftime("%H:%M")
+
 def create_attendance(sessions, teachers, students):
-    # Create Attendance records with random checked_date of either 11:00 AM or 12:00 PM
+    # Create Attendance records with random checked_date and times
     attendance_objs = [
         Attendance.objects.create(
             session=random.choice(sessions),
@@ -119,12 +131,12 @@ def create_attendance(sessions, teachers, students):
             student=random.choice(students),
             status="absent",
             attendance_date=datetime.now(),
-            # Randomly assign checked_date to either 11:00 AM or 12:00 PM
-            checked_date=datetime.now().replace(hour=11, minute=0, second=0, microsecond=0),
+            # Randomly assign checked_date to a time between 10 AM and 5 PM
+            checked_date=datetime.now().replace(hour=int(random_time().split(":")[0]), minute=int(random_time().split(":")[1]), second=0, microsecond=0),
             start_time="11:00",
             end_time="12:00",
         )
-        for _ in range(5)
+        for _ in range(20)  # Create at least 20 records
     ]
 
     print(f"✅ Created {len(attendance_objs)} attendance records.")
