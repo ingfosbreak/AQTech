@@ -7,6 +7,7 @@ class Course(models.Model):
     type = models.ForeignKey(Type, on_delete=models.CASCADE, related_name="courses")
     quota = models.IntegerField(default=10)  # Added quota_number field
     created_at = models.DateTimeField(auto_now_add=True)
+    price = models.IntegerField(default=3500)
     def __str__(self):
         return self.courseName
 

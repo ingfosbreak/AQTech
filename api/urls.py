@@ -2,7 +2,7 @@ from django.urls import path
 # from .views import Home
 # from api.views.storage_views import StorageListView, StorageDetailView
 from api.views import StorageListView, StorageDetailView, StaffUserView, UserUpdateView, UserDetailView, UserListView, StudentCreateView, StudentListView, TeacherCreateView, TeacherListView, SessionView, UserInfoView, VerifyTokenView, CombinedCountView, PieChartStaticView
-from api.views.course_views import CompletedCoursesView, CourseCreateView, CourseListView, CourseDetailView
+from api.views.course_views import CompletedCoursesView, CourseCreateView, CourseListView, CourseDetailView, CoursePriceListView
 from api.views.session_views import SessionProgressDetailView, SessionProgressView
 from api.views.student_views import AddStudentView, UserStudentListView
 from api.views.user_views import ProfileView
@@ -11,7 +11,8 @@ from api.views.student_views import AddStudentView, StudentDetailView, StudentUs
 from api.views import CreatePaymentIntentView, StripeWebhookAPIView
 from api.views.storage_views import StorageChangeImage
 from api.views.certificate_views import CerificateListView
-from api.views.attendance_views import AttendanceView, AttendanceModifyView
+from api.views.attendance_views import AttendanceView, AttendanceModifyView, AttendanceListView
+from api.views.payments_views import HandleBeforePaymentView
 # from api.views.user_views import StaffUserView, UserUpdateView
 
 urlpatterns = [
@@ -41,6 +42,7 @@ urlpatterns = [
     path("static/count/", CombinedCountView.as_view(), name="combined-count"),
     path("static/pie/", PieChartStaticView.as_view(), name="pie-count"),
     path('courses/', CourseListView.as_view(), name='course-list'),  # GET /courses/
+    path('courses-price/', CoursePriceListView.as_view(), name='course-list-price'),  # GET /courses/
     path('course/<int:pk>', CourseDetailView.as_view(), name="course-detail"),
     path('courses/create/', CourseCreateView.as_view(), name='course-create'),  # POST /courses/create/
     path("courses/completed/", CompletedCoursesView.as_view(), name="completed-courses"),
@@ -48,6 +50,8 @@ urlpatterns = [
     path("certificates-upload/", CerificateListView.as_view(), name="certificate-upload"),
     path('create-payment-intent/', CreatePaymentIntentView.as_view(), name='create-payment-intent'),
     path("webhook/stripe/", StripeWebhookAPIView.as_view(), name="stripe-webhook"),
+    path("handle-timeline/", HandleBeforePaymentView.as_view(), name="handle-validation"),
     path("attendance-create/", AttendanceView.as_view(), name="attendance-create"),
-    path("attendance-all/", AttendanceModifyView.as_view(), name="attendance-modify")
+    path("attendance-all/", AttendanceModifyView.as_view(), name="attendance-modify"),
+    path("attendacne-buy/", AttendanceListView.as_view(), name="attendance-buy"),
 ]

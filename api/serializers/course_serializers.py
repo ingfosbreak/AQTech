@@ -7,3 +7,10 @@ class CourseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Course
         fields = ["id", "courseName", "description", "type", "quota", "created_at"]
+
+class CoursePriceSerializer(serializers.ModelSerializer):
+    type = serializers.PrimaryKeyRelatedField(queryset=Type.objects.all())  # Accepts typeId
+
+    class Meta:
+        model = Course
+        fields = ["id", "courseName", "description", "type", "quota", "created_at", "price"]
