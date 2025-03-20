@@ -17,3 +17,5 @@ staticfiles
 
 # Ne pas ignorer ces fichiers
 !.env.dev-exemple
+
+db.sqlite3
