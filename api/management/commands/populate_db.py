@@ -117,11 +117,11 @@ def create_attendance(sessions, teachers, students):
             session=random.choice(sessions),
             teacher=random.choice(teachers),
             student=random.choice(students),
-            status="Present",
+            status="absent",
             attendance_date=datetime.now(),
             # Randomly assign checked_date to either 11:00 AM or 12:00 PM
             checked_date=datetime.now().replace(hour=random.choice([18, 24]), minute=0, second=0, microsecond=0),
-            start_time="10:00",
+            start_time="11:00",
             end_time="12:00",
         )
         for _ in range(5)

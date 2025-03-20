@@ -11,8 +11,8 @@ from api.views.teacher_views import CreateUserTeacherView, TeacherUsernameListVi
 from api.views.student_views import AddStudentView, StudentDetailView, StudentUsernameListView, StudentCertificateListView
 from api.views import CreatePaymentIntentView, StripeWebhookAPIView
 from api.views.storage_views import StorageChangeImage
-from api.views.certificate_views import CerificateListView
-from api.views.attendance_views import AttendanceView, AttendanceModifyView
+from api.views.certificate_views import CerificateListView, AllCertificate
+from api.views.attendance_views import AttendanceView, AttendanceModifyView, UpdateAttendanceStatus
 # from api.views.user_views import StaffUserView, UserUpdateView
 
 urlpatterns = [
@@ -47,10 +47,12 @@ urlpatterns = [
     path("courses/completed/", CompletedCoursesView.as_view(), name="completed-courses"),
     path("profile/", ProfileView.as_view(), name="profile"),
     path("certificates-upload/", CerificateListView.as_view(), name="certificate-upload"),
+    path("certificates-all/", AllCertificate.as_view(), name="certificate-upload"),
     path('create-payment-intent/', CreatePaymentIntentView.as_view(), name='create-payment-intent'),
     path("webhook/stripe/", StripeWebhookAPIView.as_view(), name="stripe-webhook"),
     path("attendance-create/", AttendanceView.as_view(), name="attendance-create"),
     path("attendance-all/", AttendanceModifyView.as_view(), name="attendance-modify"),
     path("attendance-heatmap/", AttendanceHeatmapView.as_view(), name="attendance-heatmap"),
     path("attendance-log/", AttendanceLogView.as_view(), name="attendance-log"),
+    path("attendance-update/", UpdateAttendanceStatus.as_view(), name="attendance-update"),
 ]
