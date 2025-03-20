@@ -35,10 +35,10 @@ def create_types_and_courses():
     type_objs = {name: Type.objects.get_or_create(typeName=name)[0] for name in types}
 
     courses_data = [
-        {"courseName": "Swiming baby class", "description": "Let learn swimming together!", "type": type_objs["AquaKids"]},
-        {"courseName": "Begining to be pianist", "description": "Play and Learn about piano", "type": type_objs["Playsound"]},
-        {"courseName": "Taekwando class", "description": "Pratice Pratice Practice", "type": type_objs["Other"]},
-        {"courseName": "Play Dough class", "description": "Build somthing creative and having fun together", "type": type_objs["Other"]},
+        {"courseName": "Swiming baby class", "description": "Let learn swimming together!", "type": type_objs["AquaKids"], "price":1000},
+        {"courseName": "Begining to be pianist", "description": "Play and Learn about piano", "type": type_objs["Playsound"], "price":1000},
+        {"courseName": "Taekwando class", "description": "Pratice Pratice Practice", "type": type_objs["Other"], "price":1000},
+        {"courseName": "Play Dough class", "description": "Build somthing creative and having fun together", "type": type_objs["Other"], "price":1000},
     ]
 
     course_objs = []
