@@ -1,16 +1,19 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from django.db.models import Count
+from django.db.models import Count, DateField
 from api import models
 from api.models import Student, Teacher, CourseSession
 from django.utils.timezone import now
 from datetime import timedelta
 from datetime import time
-from django.utils.timezone import localtime
+from django.utils.timezone import localtime, get_current_timezone
 from django.db.models import Q
-
+from django.utils import timezone
 from api.models.attendance import Attendance
+from api.models import Attendance
+from django.db.models.functions import TruncDate
+from django.db.models.functions import ExtractHour, ExtractWeekDay
 
 class CombinedCountView(APIView):
     def get(self, request):
@@ -53,61 +56,70 @@ class PieChartStaticView(APIView):
 
 class AttendanceHeatmapView(APIView):
     def get(self, request):
+        # Get course type filter from query parameters
         course_type = request.GET.get("courseType", "All")
-
-        # Define time slot ranges
-        time_slots = {}
-        for hour in range(9, 18):  # From 9am to 5pm
-            start_time = time(hour, 0)
-            end_time = time(hour + 1, 0)
-            label = f"{hour}am" if hour < 12 else f"{hour - 12}pm" if hour != 12 else "12pm"
-            time_slots[label] = (start_time, end_time)
-
-        days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
-
-        # Filter sessions based on course type
+        
+        # Create base queryset with related data
+        queryset = Attendance.objects.select_related("session__course__type")
+        
+        # Apply course type filter if needed
         if course_type != "All":
-            sessions = CourseSession.objects.filter(course__type__typeName=course_type)
-        else:
-            sessions = CourseSession.objects.all()
+            queryset = queryset.filter(
+                Q(session__course__type__typeName=course_type)
+            )
 
-        # Prepare empty heatmap structure
-        heatmap_data = {day: {slot: 0 for slot in time_slots.keys()} for day in days}
+        # Annotate with time and weekday information
+        annotated = queryset.annotate(
+            hour=ExtractHour('checked_date'),
+            weekday=(ExtractWeekDay('checked_date') - 2) % 7  # Convert to Mon=0, Sun=6
+        ).filter(hour__gte=9, hour__lte=17)  # Only include hours 9am-5pm
 
-        for session in sessions:
-            session_day = session.session_date.strftime("%a")[:3]  # Convert date to "Mon", "Tue", etc.
-            if session_day not in days:
-                continue
+        # Aggregate data
+        heatmap_data = (
+            annotated.values('weekday', 'hour')
+            .annotate(total=Count('id'))
+            .order_by('weekday', 'hour')
+        )
 
-            # Total students for this session
-            total_students = Attendance.objects.filter(session=session).count()
-            if total_students == 0:
-                continue  # Skip if no students
+        # Create time slot mapping and day mapping
+        time_mapping = {
+            9: "9am",
+            10: "10am",
+            11: "11am",
+            12: "12pm",
+            13: "1pm",
+            14: "2pm",
+            15: "3pm",
+            16: "4pm",
+            17: "5pm"
+        }
+        
+        days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+        result = {day: {time: 0 for time in time_mapping.values()} for day in days}
 
-            for slot, (start_time, end_time) in time_slots.items():
-                # Adjust filtering for overlapping time slots
-                attended_students = Attendance.objects.filter(
-                    session=session,
-                    status="present",
-                ).filter(
-                    # Check if the attendance overlaps with the time slot
-                    start_time__lt=end_time,  # Start time before end of the slot
-                    end_time__gt=start_time,  # End time after the start of the slot
-                ).count()
+        # Populate the result dictionary
+        for entry in heatmap_data:
+            day_index = entry['weekday']
+            hour = entry['hour']
+            count = entry['total']
+            
+            if 0 <= day_index < 7 and hour in time_mapping:
+                day_name = days[day_index]
+                time_slot = time_mapping[hour]
+                result[day_name][time_slot] = count
 
-                # Calculate attendance percentage
-                if total_students > 0:
-                    attendance_percentage = (attended_students / total_students) * 100
-                    rounded_percentage = round(attendance_percentage, 2)
+        # Calculate percentages relative to maximum count
+        max_count = max(
+            entry['total'] for entry in heatmap_data
+        ) if heatmap_data else 1  # Prevent division by zero
 
-                    # Convert to integer if it's a whole number
-                    if rounded_percentage.is_integer():
-                        heatmap_data[session_day][slot] = int(rounded_percentage)
-                    else:
-                        heatmap_data[session_day][slot] = rounded_percentage
+        # Convert counts to percentages
+        for day in days:
+            for time_slot in result[day]:
+                if max_count > 0:
+                    result[day][time_slot] = round((result[day][time_slot] / max_count) * 100, 2)
 
-        return Response(heatmap_data, status=status.HTTP_200_OK)
-
+        return Response(result, status=status.HTTP_200_OK)
 
 class AttendanceLogView(APIView):
     def get(self, request):
