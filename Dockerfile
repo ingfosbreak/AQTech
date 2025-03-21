@@ -6,7 +6,7 @@ COPY . .
 RUN apt-get update && apt-get upgrade -y
 RUN pip install poetry
 
-RUN poetry install
+RUN poetry install --no-root
 
 RUN poetry run python manage.py makemigrations api
 
