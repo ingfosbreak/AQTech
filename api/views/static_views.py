@@ -7,14 +7,14 @@ from api.models import Student, Teacher, CourseSession
 from django.utils.timezone import now
 from datetime import timedelta
 from datetime import time
-from django.utils.timezone import localtime, get_current_timezone
 from django.db.models import Q
 from django.utils import timezone
 from api.models.attendance import Attendance
 from api.models import Attendance
 from django.db.models.functions import TruncDate
-from django.db.models.functions import ExtractHour, ExtractWeekDay
+from django.db.models.functions import ExtractHour, ExtractWeekDay, Extract
 from django.db.models.functions import TruncMonth
+from django.utils.timezone import make_naive
 
 from api.models.course import Course
 
@@ -68,60 +68,43 @@ class AttendanceHeatmapView(APIView):
     def get(self, request):
         # Get course type filter from query parameters
         course_type = request.GET.get("courseType", "All")
-        
-        # Create base queryset with related data
-        queryset = Attendance.objects.select_related("session__course__type")
-        
+
+        # Base queryset with necessary joins
+        queryset = Attendance.objects.select_related("session__course__type").only("checked_date")
+
         # Apply course type filter if needed
         if course_type != "All":
-            queryset = queryset.filter(
-                Q(session__course__type__typeName=course_type)
-            )
+            queryset = queryset.filter(session__course__type__typeName=course_type)
 
-        # Annotate with time and weekday information
-        annotated = queryset.annotate(
-            hour=ExtractHour('checked_date'),
-            weekday=(ExtractWeekDay('checked_date') - 2) % 7  # Convert to Mon=0, Sun=6
-        ).filter(hour__gte=9, hour__lte=17)  # Only include hours 9am-5pm
+        # Convert QuerySet to a list of dictionaries
+        attendance_data = list(queryset.values("checked_date"))
 
-        # Aggregate data
-        heatmap_data = (
-            annotated.values('weekday', 'hour')
-            .annotate(total=Count('id'))
-            .order_by('weekday', 'hour')
-        )
-
-        # Create time slot mapping and day mapping
+        # Define time slots
         time_mapping = {
-            9: "9am",
-            10: "10am",
-            11: "11am",
-            12: "12pm",
-            13: "1pm",
-            14: "2pm",
-            15: "3pm",
-            16: "4pm",
-            17: "5pm"
+            9: "9am", 10: "10am", 11: "11am", 12: "12pm",
+            13: "1pm", 14: "2pm", 15: "3pm", 16: "4pm",
+            17: "5pm", 18: "6pm", 19: "7pm", 20: "8pm",
+            21: "9pm", 22: "10pm",
         }
-        
+
         days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
         result = {day: {time: 0 for time in time_mapping.values()} for day in days}
 
-        # Populate the result dictionary
-        for entry in heatmap_data:
-            day_index = entry['weekday']
-            hour = entry['hour']
-            count = entry['total']
-            
-            if 0 <= day_index < 7 and hour in time_mapping:
-                day_name = days[day_index]
+        # Process raw data
+        for entry in attendance_data:
+            checked_datetime = entry["checked_date"]  # Keep timezone-aware datetime
+
+            # Extract hour and weekday
+            hour = checked_datetime.hour
+            weekday = checked_datetime.weekday()  # Monday = 0, Sunday = 6
+
+            if hour in time_mapping and 0 <= weekday < 7:
+                day_name = days[weekday]
                 time_slot = time_mapping[hour]
-                result[day_name][time_slot] = count
+                result[day_name][time_slot] += 1  # Increment count
 
         # Calculate percentages relative to maximum count
-        max_count = max(
-            entry['total'] for entry in heatmap_data
-        ) if heatmap_data else 1  # Prevent division by zero
+        max_count = max((count for day in result.values() for count in day.values()), default=1)
 
         # Convert counts to percentages
         for day in days:
@@ -161,7 +144,7 @@ class AttendanceLogView(APIView):
                 "studentId": attendance.student.id,
                 "course": attendance.session.course.courseName,
                 "courseType": attendance.session.course.type.typeName,
-                "timestamp": localtime(attendance.checked_date).strftime("%Y-%m-%d %H:%M:%S"),  # Updated field
+                "timestamp": attendance.checked_date.strftime("%Y-%m-%d %H:%M:%S"),  # Updated field
             }
             for attendance in queryset
         ]
@@ -193,18 +176,16 @@ class RecentAttendanceView(APIView):
             checked_date = record.checked_date
             
             if checked_date is not None:
-                # Convert to local time if necessary
-                local_checked_date = timezone.localtime(checked_date)
                 
                 # Serialize data
                 records.append({
-                    "timestamp": local_checked_date.strftime("%Y-%m-%d %H:%M:%S"),
+                    "timestamp": checked_date.strftime("%Y-%m-%d %H:%M:%S"),
                     "status": record.status
                 })
 
                 # Add relative time labels (e.g., Yesterday, 2 days ago)
                 now = timezone.now()
-                diff = now - local_checked_date
+                diff = now - checked_date
 
                 if diff.days == 0:
                     records[-1]['relativeTime'] = "Today"
