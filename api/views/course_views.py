@@ -2,7 +2,7 @@ from rest_framework.generics import ListAPIView
 from api.models import Course
 from api.models.session import CourseSession
 from api.models.student import Student
-from api.serializers.course_serializers import CourseSerializer
+from api.serializers.course_serializers import CourseSerializer, CoursePriceSerializer
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
@@ -27,6 +27,9 @@ class CourseDetailView(APIView):
         serializer = CourseSerializer(storage)
         return Response(serializer.data, status=status.HTTP_200_OK)
     
+class CoursePriceListView(ListAPIView):
+    queryset = Course.objects.all()
+    serializer_class = CoursePriceSerializer
 
 class CourseCreateView(APIView):
     def post(self, request, *args, **kwargs):
@@ -42,7 +45,7 @@ class CourseCreateView(APIView):
 
         # Attach type to the request data and validate the serializer
         request.data["type"] = type.id  # Attach the type ID to the data
-        serializer = CourseSerializer(data=request.data)
+        serializer = CoursePriceSerializer(data=request.data)
 
         if serializer.is_valid():
             serializer.save()

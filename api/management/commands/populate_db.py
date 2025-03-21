@@ -94,7 +94,7 @@ def create_types_and_courses():
         for course_name in courses:
             course, created = Course.objects.update_or_create(
                 courseName=course_name,
-                defaults={"description": f"This is a {type_name} course.", "type": type_objs[type_name], "created_at": now()},
+                defaults={"description": f"This is a {type_name} course.", "type": type_objs[type_name], "created_at": now(), "price": 3500},
             )
             course_objs.append(course)
     
