@@ -4,14 +4,15 @@ from django.urls import path
 from api.views import StorageListView, StorageDetailView, StaffUserView, UserUpdateView, UserDetailView, UserListView, StudentCreateView, StudentListView, TeacherCreateView, TeacherListView, SessionView, UserInfoView, VerifyTokenView, CombinedCountView, PieChartStaticView
 from api.views.course_views import CompletedCoursesView, CourseCreateView, CourseListView, CourseDetailView, CoursePriceListView
 from api.views.session_views import SessionProgressDetailView, SessionProgressView
+from api.views.static_views import AttendanceHeatmapView, AttendanceLogView, CoursePerformanceView, RecentAttendanceView
 from api.views.student_views import AddStudentView, UserStudentListView
 from api.views.user_views import ProfileView
 from api.views.teacher_views import CreateUserTeacherView, TeacherUsernameListView
 from api.views.student_views import AddStudentView, StudentDetailView, StudentUsernameListView, StudentCertificateListView
 from api.views import CreatePaymentIntentView, StripeWebhookAPIView
 from api.views.storage_views import StorageChangeImage
-from api.views.certificate_views import CerificateListView
-from api.views.attendance_views import AttendanceView, AttendanceModifyView, AttendanceListView
+from api.views.certificate_views import CerificateListView, AllCertificate
+from api.views.attendance_views import AttendanceView, AttendanceModifyView, AttendanceListView, UpdateAttendanceStatus
 from api.views.payments_views import HandleBeforePaymentView
 # from api.views.user_views import StaffUserView, UserUpdateView
 
@@ -46,12 +47,18 @@ urlpatterns = [
     path('course/<int:pk>', CourseDetailView.as_view(), name="course-detail"),
     path('courses/create/', CourseCreateView.as_view(), name='course-create'),  # POST /courses/create/
     path("courses/completed/", CompletedCoursesView.as_view(), name="completed-courses"),
+    path('course-performance/', CoursePerformanceView.as_view(), name='course-performance'),
     path("profile/", ProfileView.as_view(), name="profile"),
     path("certificates-upload/", CerificateListView.as_view(), name="certificate-upload"),
+    path("certificates-all/", AllCertificate.as_view(), name="certificate-upload"),
     path('create-payment-intent/', CreatePaymentIntentView.as_view(), name='create-payment-intent'),
     path("webhook/stripe/", StripeWebhookAPIView.as_view(), name="stripe-webhook"),
     path("handle-timeline/", HandleBeforePaymentView.as_view(), name="handle-validation"),
     path("attendance-create/", AttendanceView.as_view(), name="attendance-create"),
     path("attendance-all/", AttendanceModifyView.as_view(), name="attendance-modify"),
+    path("attendance-heatmap/", AttendanceHeatmapView.as_view(), name="attendance-heatmap"),
+    path("attendance-log/", AttendanceLogView.as_view(), name="attendance-log"),
+    path("attendance-update/", UpdateAttendanceStatus.as_view(), name="attendance-update"),
+    path("attendance-recent/", RecentAttendanceView.as_view(), name="attendance-recent"),
     path("attendacne-buy/", AttendanceListView.as_view(), name="attendance-buy"),
 ]

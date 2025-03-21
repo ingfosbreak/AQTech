@@ -16,12 +16,6 @@ class CerificateListView(APIView):
     # authentication_classes = [JWTAuthentication]
     # permission_classes = [IsAdmin]
 
-    # def get(self, request):
-    #     storages = Storage.objects.all()
-    #     serializer = StorageSerializer(storages, many=True)
-    #     return Response(serializer.data, status=status.HTTP_200_OK)
-    
-   
     def post(self, request):
 
         file = request.FILES.get('certificate_image')
@@ -68,5 +62,28 @@ class CerificateListView(APIView):
 
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    
-    
+
+
+class AllCertificate(APIView):
+    # authentication_classes = [JWTAuthentication]
+
+    def get(self, request):
+        authenticated_user = request.user
+
+        if not authenticated_user:
+            return Response({"error": "No user"}, status=status.HTTP_401_UNAUTHORIZED)
+        
+        certificates = Certificate.objects.filter(user=authenticated_user)
+        
+        # Prepare the response data manually
+        certificate_data = []
+        for certificate in certificates:
+            certificate_data.append({
+                'id': certificate.id,
+                'course': certificate.course.courseName,  # Adjust if needed to retrieve course info
+                'status': certificate.status,  # Added status field here
+                'certificate_url': certificate.certificate_url,
+            })
+        
+        # Return the response as JSON with status code 200
+        return JsonResponse(certificate_data, safe=False, status=status.HTTP_200_OK)  # Explicitly setting status to 200

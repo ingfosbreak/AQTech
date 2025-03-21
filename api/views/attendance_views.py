@@ -115,6 +115,48 @@ class AttendanceModifyView(APIView):
         except Exception as e:
             return Response({"error": f"Something went wrong: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+class UpdateAttendanceStatus(APIView):
+    # authentication_classes = [JWTAuthentication]
+    # permission_classes = [IsAdmin]
+
+    def patch(self, request):
+        student_id = request.data.get('student_id')
+        
+        # Get the current date and time
+        current_time = timezone.now().replace(microsecond=0)
+        current_date = current_time.date()
+
+        if not student_id:
+            return Response({'detail': 'student_id is required.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Filter attendances by student_id, today's date, and time between start_time and end_time
+        attendance = Attendance.objects.filter(
+            student_id=student_id,
+            attendance_date=current_date,
+            status='absent'  # Only update if the student is marked as 'absent'
+        ).first()  # Get the first match (or None if no match)
+
+        if not attendance:
+            return Response({'detail': 'No matching attendance found for the student at this time.'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+        start_datetime = datetime.combine(attendance.attendance_date, attendance.start_time)
+        end_datetime = datetime.combine(attendance.attendance_date, attendance.end_time)
+        
+        # Make the datetime objects timezone-aware
+        start_datetime = timezone.make_aware(start_datetime, timezone.get_current_timezone())
+        end_datetime = timezone.make_aware(end_datetime, timezone.get_current_timezone())
+
+        if start_datetime <= current_time <= end_datetime:
+            # Update the attendance status to 'present' and set the checked_date to now
+            attendance.status = 'present'
+            attendance.checked_date = current_time
+            attendance.save()
+
+            return Response({'detail': 'Attendance updated successfully.'}, status=status.HTTP_200_OK)
+        else:
+            return Response({'detail': 'Current time is not within the attendance session period.'}, status=status.HTTP_400_BAD_REQUEST)
+
 class AttendanceListView(APIView):
     def get(self, request):
         student_id = request.GET.get("student_id")
