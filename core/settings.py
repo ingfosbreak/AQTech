@@ -18,7 +18,7 @@ import environ
 import stripe
 
 env = environ.Env()
-environ.Env.read_env(".env.dev")
+environ.Env.read_env(".env")
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -34,7 +34,6 @@ SECRET_KEY = 'django-insecure-%hjisw!0c0)bs&s9m#0e(#(=g54-#f+q2-d3+p%puk)0=5qrp#
 DEBUG = True
 
 ALLOWED_HOSTS = [
-    '1e1f-171-101-123-41.ngrok-free.app',  # Add your ngrok URL
     'localhost',
     '127.0.0.1',
 ]
@@ -93,10 +92,10 @@ WSGI_APPLICATION = 'core.wsgi.application'
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.mysql",
-        "NAME": 'AQdatabase',
-        "USER": 'superadmin',
-        "PASSWORD": 'superpassword',
-        "HOST": 'localhost',
+        "NAME": env("DATABASE_NAME"),
+        "USER": env("DATABASE_USER"),
+        "PASSWORD": env("DATABASE_PASSWORD"),
+        "HOST": env("DATABASE_HOST"),
         "PORT": '3306'
     }
 }
