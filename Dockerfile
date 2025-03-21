@@ -8,7 +8,5 @@ RUN pip install poetry
 
 RUN poetry install --no-root
 
-RUN poetry run python manage.py makemigrations api
-
 CMD [ "poetry","run","manage.py","migrate","&&","poetry", "run", "python", "manage.py", "runserver", "0.0.0.0:8000" ] 
 EXPOSE 8000

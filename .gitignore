@@ -7,7 +7,7 @@ devenv
 .pot
 .pyc
 __pycache__
-migrations
+
 
 # Docker generated files/folder from config
 mysql
