@@ -1,8 +1,10 @@
 from supabase import create_client
-from django.conf import settings
+import os
+from dotenv import load_dotenv
+load_dotenv()
 
 # Initialize Supabase client
-supabase = create_client(settings.SUPABASE_URL, settings.SUPABASE_KEY)
+supabase = create_client(os.getenv('SUPABASE_URL'), os.getenv('SUPABASE_KEY'))
 
 def get_supabase_client():
     return supabase
