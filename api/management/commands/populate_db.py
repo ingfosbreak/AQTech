@@ -1,5 +1,6 @@
 import random
 from datetime import datetime, timedelta
+from django.utils import timezone
 from django.contrib.auth import get_user_model
 from django.utils.timezone import now
 from api.models import (
@@ -12,9 +13,10 @@ User = get_user_model()  # Use custom User model if applicable
 # ------------------------- Create Users -------------------------
 def create_users():
     users = [
-        {"username": "staff", "password": "admin123", "email": "staff@example.com", "role": "staff", "join_date": datetime.now()},
-        {"username": "teacher1", "password": "pass123", "email": "teacher1@example.com", "role": "teacher", "join_date": datetime.now() - timedelta(days=100)},
-        {"username": "teacher2", "password": "pass123", "email": "teacher2@example.com", "role": "teacher", "join_date": datetime.now() - timedelta(days=90)},
+        {"username": "staff", "password": "admin123", "email": "staff@example.com", "role": "staff", "join_date": timezone.now()},
+        {"username": "teacher1", "password": "pass123", "email": "teacher1@example.com", "role": "teacher", "join_date": timezone.now() - timedelta(days=100)},
+        {"username": "teacher2", "password": "pass123", "email": "teacher2@example.com", "role": "teacher", "join_date": timezone.now() - timedelta(days=90)},
+        {"username": "parent1", "password": "pass123", "email": "teacher3@example.com", "role": "user", "join_date": timezone.now() - timedelta(days=90)},
     ]
 
     # Generate 10 "user" role accounts
@@ -24,7 +26,7 @@ def create_users():
             "password": "userpass123",
             "email": f"user{i}@example.com",
             "role": "user",
-            "join_date": datetime.now() - timedelta(days=i * 10),
+            "join_date": timezone.now() - timedelta(days=i * 10),
         })
 
     user_objs = []
@@ -148,7 +150,7 @@ def create_course_sessions(courses, teachers, students):
                 course=random.choice(courses),
                 teacher=random.choice(teachers),  # ✅ Safe because teachers exist
                 student=student,  
-                session_date=datetime.now() + timedelta(days=random.randint(1, 30)),
+                session_date=timezone.now() + timedelta(days=random.randint(1, 30)),
                 total_quota=1,
                 start_time="10:00",
                 end_time="12:00",
@@ -190,9 +192,9 @@ def create_attendance(sessions, teachers, students):
             teacher=random.choice(teachers),
             student=random.choice(students),
             status="absent",
-            attendance_date=datetime.now(),
+            attendance_date=timezone.now(),
             # Randomly assign checked_date to a time between 10 AM and 5 PM
-            checked_date=datetime.now().replace(hour=int(random_time().split(":")[0]), minute=int(random_time().split(":")[1]), second=0, microsecond=0),
+            checked_date=timezone.now().replace(hour=int(random_time().split(":")[0]), minute=int(random_time().split(":")[1]), second=0, microsecond=0),
             start_time="11:00",
             end_time="12:00",
         )
@@ -222,7 +224,7 @@ def create_receipts(students, sessions):
             student=random.choice(students),
             session=random.choice(sessions),
             amount=1000,
-            payment_date=datetime.now(),
+            payment_date=timezone.now(),
             payment_method="Credit Card",
             transaction_id=f"TXN{random.randint(1000,9999)}"
         )
