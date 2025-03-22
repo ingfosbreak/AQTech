@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from api.permissions import IsAdmin
-from api.models import Certificate, User, Course
+from api.models import Certificate, User, Course, Student
 from api.services import supabase
 from django.conf import settings
 from django.shortcuts import get_object_or_404
@@ -27,7 +27,7 @@ class CerificateListView(APIView):
         file_path = f"certificates/{unique_filename}"  # File path in Supabase bucket
         file_content = file.read()
 
-        user = get_object_or_404(User, id=request.data.get("user"))  # Retrieves the User instance
+        student = get_object_or_404(Student, id=request.data.get("student"))  # Retrieves the User instance
 
         # You may also want to fetch the course or other related objects
         course = get_object_or_404(Course, id=request.data.get("course"))
@@ -45,7 +45,7 @@ class CerificateListView(APIView):
             )
 
             certificate = Certificate(
-                user=user,  # Assuming user is provided in the request data
+                student=student,  # Assuming user is provided in the request data
                 course=course,  # Assuming course is provided in the request data
                 certificate_url=file_url,
                 status="issued"  # Default status to "issued"
@@ -67,13 +67,11 @@ class CerificateListView(APIView):
 class AllCertificate(APIView):
     # authentication_classes = [JWTAuthentication]
 
-    def get(self, request):
-        authenticated_user = request.user
-
-        if not authenticated_user:
-            return Response({"error": "No user"}, status=status.HTTP_401_UNAUTHORIZED)
+    def get(self, request, pk):
         
-        certificates = Certificate.objects.filter(user=authenticated_user)
+        student = get_object_or_404(Student, id=pk)  # Retrieves the User instance
+        
+        certificates = Certificate.objects.filter(student=student)
         
         # Prepare the response data manually
         certificate_data = []
