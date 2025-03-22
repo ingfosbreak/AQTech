@@ -12,7 +12,7 @@ from api.views.student_views import AddStudentView, StudentDetailView, StudentUs
 from api.views import CreatePaymentIntentView, StripeWebhookAPIView
 from api.views.storage_views import StorageChangeImage
 from api.views.certificate_views import CerificateListView, AllCertificate
-from api.views.attendance_views import AttendanceView, AttendanceModifyView, AttendanceListView, UpdateAttendanceStatus
+from api.views.attendance_views import AttendanceView, AttendanceModifyView, AttendanceListView, UpdateAttendanceStatus, AttendanceListModifyView
 from api.views.payments_views import HandleBeforePaymentView
 # from api.views.user_views import StaffUserView, UserUpdateView
 
@@ -61,4 +61,5 @@ urlpatterns = [
     path("attendance-update/", UpdateAttendanceStatus.as_view(), name="attendance-update"),
     path("attendance-recent/", RecentAttendanceView.as_view(), name="attendance-recent"),
     path("attendacne-buy/", AttendanceListView.as_view(), name="attendance-buy"),
+    path("attendacne-but-modify/", AttendanceListModifyView.as_view(), name="attendance-buy-modify"),
 ]
