@@ -27,6 +27,7 @@ class CerificateListView(APIView):
         file_path = f"certificates/{unique_filename}"  # File path in Supabase bucket
         file_content = file.read()
 
+        user = get_object_or_404(User, id=request.data.get("user"))
         student = get_object_or_404(Student, id=request.data.get("student"))  # Retrieves the User instance
 
         # You may also want to fetch the course or other related objects
@@ -48,7 +49,8 @@ class CerificateListView(APIView):
                 student=student,  # Assuming user is provided in the request data
                 course=course,  # Assuming course is provided in the request data
                 certificate_url=file_url,
-                status="issued"  # Default status to "issued"
+                status="issued",  # Default status to "issued"
+                user=user
             )
             certificate.save()
 
