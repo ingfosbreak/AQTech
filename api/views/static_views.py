@@ -147,7 +147,7 @@ class AttendanceLogView(APIView):
                 "studentId": attendance.student.id,
                 "course": attendance.session.course.courseName,
                 "courseType": attendance.session.course.type.typeName,
-                "timestamp": attendance.checked_date.strftime("%Y-%m-%d %H:%M:%S"),  # Updated field
+                "timestamp": attendance.checked_date.strftime("%Y-%m-%d %H:%M:%S") if attendance.checked_date else None, # Updated field
             }
             for attendance in queryset
         ]
