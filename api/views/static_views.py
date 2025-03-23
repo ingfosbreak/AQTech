@@ -64,7 +64,6 @@ class PieChartStaticView(APIView):
         ]
 
         return Response(data, status=status.HTTP_200_OK)
-
 class AttendanceHeatmapView(APIView):
     def get(self, request):
         # Get course type filter from query parameters
@@ -77,12 +76,13 @@ class AttendanceHeatmapView(APIView):
         if course_type != "All":
             queryset = queryset.filter(Q(session__course__type__typeName=course_type))
 
-        # Extract hour and weekday without annotation
+        # Extract hour and weekday with local time conversion
         heatmap_data = []
         for attendance in queryset:
             if attendance.checked_date:  # Ensure checked_date is not None
-                hour = attendance.checked_date.hour
-                weekday = (attendance.checked_date.weekday())  # Monday = 0, Sunday = 6
+                local_checked_date = localtime(attendance.checked_date)  # Convert to local timezone
+                hour = local_checked_date.hour
+                weekday = local_checked_date.weekday()  # Monday = 0, Sunday = 6
 
                 heatmap_data.append({"weekday": weekday, "hour": hour})
 
