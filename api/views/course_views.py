@@ -71,15 +71,13 @@ class CourseProgressAPIView(APIView):
         serializer = CourseSessionSerializer(sessions, many=True)
         return Response(serializer.data)
 
-class CompletedCoursesView(ListAPIView):
-    serializer_class = CourseSessionSerializer
-    # permission_classes = [IsAuthenticated]
+class StudentCourseListView(ListAPIView):
+    serializer_class = CourseSerializer
 
     def get_queryset(self):
-        student_id = self.request.query_params.get("studentId")
-        
+        student_id = self.request.GET.get("studentId")  # Get student ID from query parameters
+
         if not student_id:
-            return CourseSession.objects.none()  # Return empty if no student ID
-        
-        # Filter sessions where total_quota is 0 (i.e., course is completed)
-        return CourseSession.objects.filter(student_id=student_id, total_quota=0)
+            return Course.objects.none()  # Return empty queryset if no student ID is provided
+
+        return Course.objects.filter(sessions__student_id=student_id).distinct()
