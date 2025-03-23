@@ -94,6 +94,9 @@ class AttendanceHeatmapView(APIView):
         for entry in attendance_data:
             checked_datetime = entry["checked_date"]  # Keep timezone-aware datetime
 
+            if checked_datetime is None:
+                continue  # Skip entries with no checked_date
+
             # Extract hour and weekday
             hour = checked_datetime.hour
             weekday = checked_datetime.weekday()  # Monday = 0, Sunday = 6
