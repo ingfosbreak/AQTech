@@ -15,6 +15,7 @@ from django.db.models.functions import TruncDate
 from django.db.models.functions import ExtractHour, ExtractWeekDay, Extract
 from django.db.models.functions import TruncMonth
 from django.utils.timezone import make_naive
+from django.utils.timezone import localtime
 
 from api.models.course import Course
 
@@ -122,7 +123,10 @@ class AttendanceLogView(APIView):
         search_term = request.GET.get("search", "").strip().lower()
         sort_newest_first = request.GET.get("sortNewestFirst", "true").lower() == "true"
 
-        queryset = Attendance.objects.select_related("session__course__type", "student").all()
+        # Exclude records with null checked_date
+        queryset = Attendance.objects.select_related(
+            "session__course__type", "student"
+        ).exclude(checked_date__isnull=True)
 
         # Apply search filter
         if search_term:
@@ -130,14 +134,11 @@ class AttendanceLogView(APIView):
                 Q(student__name__icontains=search_term) |
                 Q(session__course__courseName__icontains=search_term) |
                 Q(session__course__type__typeName__icontains=search_term) |
-                Q(checked_date__icontains=search_term)  # Updated from 'timestamp' to 'checked_date'
+                Q(checked_date__icontains=search_term)
             )
 
         # Apply sorting
-        if sort_newest_first:
-            queryset = queryset.order_by("-checked_date")  # Updated from 'timestamp' to 'checked_date'
-        else:
-            queryset = queryset.order_by("checked_date")
+        queryset = queryset.order_by("-checked_date" if sort_newest_first else "checked_date")
 
         # Serialize data
         records = [
@@ -147,7 +148,7 @@ class AttendanceLogView(APIView):
                 "studentId": attendance.student.id,
                 "course": attendance.session.course.courseName,
                 "courseType": attendance.session.course.type.typeName,
-                "timestamp": attendance.checked_date.strftime("%Y-%m-%d %H:%M:%S") if attendance.checked_date else None, # Updated field
+                "timestamp": localtime(attendance.checked_date).strftime("%Y-%m-%d %H:%M:%S"),  # Safe, since checked_date is never None
             }
             for attendance in queryset
         ]
