@@ -93,14 +93,14 @@ class AttendanceHeatmapView(APIView):
 
         # Process raw data
         for entry in attendance_data:
-            checked_datetime = entry["checked_date"]  # Keep timezone-aware datetime
+            raw_datetime = entry["checked_date"]
 
-            if checked_datetime is None:
-                continue  # Skip entries with no checked_date
+            # Ensure datetime is naive (remove timezone)
+            naive_datetime = make_naive(raw_datetime)
 
             # Extract hour and weekday
-            hour = checked_datetime.hour
-            weekday = checked_datetime.weekday()  # Monday = 0, Sunday = 6
+            hour = naive_datetime.hour
+            weekday = (naive_datetime.weekday())  # Monday = 0, Sunday = 6
 
             if hour in time_mapping and 0 <= weekday < 7:
                 day_name = days[weekday]
