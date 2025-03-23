@@ -160,8 +160,11 @@ SIMPLE_JWT = {
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",  # Allow requests from Next.js
+    "https://aq-production.vercel.app",  # ✅ Allow Vercel frontend
+    "https://aqtech-production.up.railway.app",  # If your API makes requests to itself
 ]
 
+CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_ALL_ORIGINS = True # indevelopment
 
 SUPABASE_URL = os.environ.get('SUPABASE_URL')
