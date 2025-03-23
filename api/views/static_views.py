@@ -70,71 +70,51 @@ class AttendanceHeatmapView(APIView):
         # Get course type filter from query parameters
         course_type = request.GET.get("courseType", "All")
 
-        # Create base queryset with related data
-        queryset = Attendance.objects.select_related("session__course__type")
+        # Create base queryset with related data, excluding null checked_date
+        queryset = Attendance.objects.select_related("session__course__type").exclude(checked_date__isnull=True)
 
         # Apply course type filter if needed
         if course_type != "All":
-            queryset = queryset.filter(
-                Q(session__course__type__typeName=course_type)
-            )
+            queryset = queryset.filter(Q(session__course__type__typeName=course_type))
 
-        # Annotate with time and weekday information
-        annotated = queryset.annotate(
-            hour=Extract('checked_date', 'hour'),
-            weekday=(ExtractWeekDay('checked_date') - 2) % 7  # Convert to Mon=0, Sun=6
-        )
+        # Extract hour and weekday without annotation
+        heatmap_data = []
+        for attendance in queryset:
+            if attendance.checked_date:  # Ensure checked_date is not None
+                hour = attendance.checked_date.hour
+                weekday = (attendance.checked_date.weekday())  # Monday = 0, Sunday = 6
 
-        # Aggregate data
-        heatmap_data = (
-            annotated.values('weekday', 'hour')
-            .annotate(total=Count('id'))
-            .order_by('weekday', 'hour')
-        )
+                heatmap_data.append({"weekday": weekday, "hour": hour})
 
         # Create time slot mapping and day mapping
         time_mapping = {
-            9: "9am",
-            10: "10am",
-            11: "11am",
-            12: "12pm",
-            13: "1pm",
-            14: "2pm",
-            15: "3pm",
-            16: "4pm",
-            17: "5pm",
-            18: "6pm",
-            19: "7pm",
-            20: "8pm",
-            21: "9pm",
-            22: "10pm",
+            9: "9am", 10: "10am", 11: "11am", 12: "12pm", 13: "1pm",
+            14: "2pm", 15: "3pm", 16: "4pm", 17: "5pm", 18: "6pm",
+            19: "7pm", 20: "8pm", 21: "9pm", 22: "10pm",
         }
 
         days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
         result = {day: {time: 0 for time in time_mapping.values()} for day in days}
 
-        # Populate the result dictionary
+        # Count occurrences
         for entry in heatmap_data:
-            day_index = entry['weekday']
-            hour = entry['hour']
-            count = entry['total']
+            day_index = entry["weekday"]
+            hour = entry["hour"]
 
-            # Ensure that hour is an integer before using it as a key
-            if 0 <= day_index < 7 and isinstance(hour, int) and hour in time_mapping:
+            if 0 <= day_index < 7 and hour in time_mapping:
                 day_name = days[day_index]
                 time_slot = time_mapping[hour]
-                result[day_name][time_slot] = count
+                result[day_name][time_slot] += 1  # Increment count
 
-        # Calculate percentages relative to maximum count
+        # Find max count for percentage calculation
         max_count = max(
-            entry['total'] for entry in heatmap_data
-        ) if heatmap_data else 1  # Prevent division by zero
+            (count for day in result.values() for count in day.values()), default=1
+        )
 
         # Convert counts to percentages
         for day in days:
             for time_slot in result[day]:
-                if max_count > 0:
-                    result[day][time_slot] = round((result[day][time_slot] / max_count) * 100, 2)
+                result[day][time_slot] = round((result[day][time_slot] / max_count) * 100, 2) if max_count > 0 else 0
 
         return Response(result, status=status.HTTP_200_OK)
 
