@@ -16,7 +16,7 @@ def create_users():
         {"username": "staff", "password": "admin123", "email": "staff@example.com", "role": "staff", "join_date": timezone.now()},
         {"username": "teacher1", "password": "pass123", "email": "teacher1@example.com", "role": "teacher", "join_date": timezone.now() - timedelta(days=100)},
         {"username": "teacher2", "password": "pass123", "email": "teacher2@example.com", "role": "teacher", "join_date": timezone.now() - timedelta(days=90)},
-        {"username": "parent1", "password": "pass123", "email": "teacher3@example.com", "role": "user", "join_date": timezone.now() - timedelta(days=90)},
+        {"username": "parent1", "password": "pass123", "email": "parent1@example.com", "role": "user", "join_date": timezone.now() - timedelta(days=90)},
     ]
 
     # Generate 10 "user" role accounts
@@ -152,7 +152,7 @@ def create_course_sessions(courses, teachers, students):
                 student=student,  
                 session_date=timezone.now() + timedelta(days=random.randint(1, 30)),
                 total_quota=1,
-                start_time="10:00",
+                start_time="11:00",
                 end_time="12:00",
             )
             sessions.append(session)
@@ -251,7 +251,20 @@ def create_certificates(users, courses):
 
 
 # ------------------------- Run All Functions -------------------------
+def is_database_populated():
+    return (
+        User.objects.exists() and
+        Course.objects.exists() and
+        Teacher.objects.exists() and
+        Student.objects.exists() and
+        CourseSession.objects.exists()
+    )
+
 def populate_database():
+    if is_database_populated():
+        print("✅ Database is already populated. Skipping population.")
+        return
+    
     users = create_users()
     courses = create_types_and_courses()
     teachers = create_teachers(users)
@@ -263,5 +276,3 @@ def populate_database():
     # create_certificates(users, courses)
     print("🎉 Database successfully populated!")
 
-
-populate_database()

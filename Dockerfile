@@ -8,5 +8,7 @@ RUN pip install poetry
 
 RUN poetry install --no-root
 
-CMD ["/bin/sh", "-c", "poetry run python manage.py migrate && poetry run python manage.py runserver 0.0.0.0:8000"]
+CMD ["/bin/sh", "-c", "poetry run python manage.py migrate && \
+  poetry run python manage.py shell -c 'from api.management.commands.populate_db import populate_database; populate_database()' && \
+  poetry run python manage.py runserver 0.0.0.0:8000"]
 EXPOSE 8000
