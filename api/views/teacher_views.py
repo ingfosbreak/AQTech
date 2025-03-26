@@ -106,16 +106,24 @@ class TeacherUsernameListView(APIView):
     def get(self, request):
         teachers = Teacher.objects.all()
 
-        # Map the student objects to a list of dictionaries, including the username
         teacher_list = [
             {
                 'id': teacher.id,
                 'name': teacher.name,
                 'username': teacher.user.username,  # Get username from related User model
+                'sessions': [
+                    {
+                        'session_id': session.id,
+                        'course': session.course.name,  # Assuming Course has a `name` field
+                        'session_date': session.session_date,
+                        'start_time': session.start_time,
+                        'end_time': session.end_time,
+                        'total_quota': session.total_quota,
+                    }
+                    for session in teacher.sessions.all()  # Access related sessions through `teacher.sessions`
+                ]
             }
             for teacher in teachers
         ]
 
-        # Return the list of students with their usernames as a JSON response
         return JsonResponse(teacher_list, safe=False, status=status.HTTP_200_OK)
-    
