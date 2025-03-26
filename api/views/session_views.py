@@ -1,3 +1,4 @@
+from collections import defaultdict
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -10,6 +11,8 @@ from api.models import CourseSession
 from api.serializers import CourseSessionSerializer, AttendanceSerializer
 from datetime import timedelta
 from rest_framework.permissions import IsAuthenticated
+from django.db.models import Count
+
 class SessionView(APIView):
     # authentication_classes = [JWTAuthentication]
     # permission_classes = [IsAdmin]
@@ -131,3 +134,24 @@ class SessionProgressDetailView(APIView):
         }
 
         return Response(session_data, status=status.HTTP_200_OK)
+    
+class CourseTypeEnrollmentView(APIView):
+    def get(self, request):
+        # Query to get enrollments per course type
+        course_enrollments = (
+            CourseSession.objects
+            .values('course__type__typeName')
+            .annotate(enrollments=Count('student'))
+            .order_by('-enrollments')
+        )
+
+        # Format data for frontend
+        data = [
+            {
+                'category': enrollment['course__type__typeName'],
+                'enrollments': enrollment['enrollments'],
+            }
+            for enrollment in course_enrollments
+        ]
+        
+        return Response(data)
