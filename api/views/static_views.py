@@ -64,6 +64,7 @@ class PieChartStaticView(APIView):
         ]
 
         return Response(data, status=status.HTTP_200_OK)
+    
 class AttendanceHeatmapView(APIView):
     def get(self, request):
         # Get course type filter from query parameters
@@ -106,16 +107,7 @@ class AttendanceHeatmapView(APIView):
                 time_slot = time_mapping[hour]
                 result[day_name][time_slot] += 1  # Increment count
 
-        # Find max count for percentage calculation
-        max_count = max(
-            (count for day in result.values() for count in day.values()), default=1
-        )
-
-        # Convert counts to percentages
-        for day in days:
-            for time_slot in result[day]:
-                result[day][time_slot] = round((result[day][time_slot] / max_count) * 100, 2) if max_count > 0 else 0
-
+        # Return the raw count values, no need to convert to percentages
         return Response(result, status=status.HTTP_200_OK)
 
 class AttendanceLogView(APIView):
