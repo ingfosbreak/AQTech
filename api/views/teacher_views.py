@@ -131,7 +131,7 @@ class TeacherDetailView(APIView):
                 'sessions': [
                     {
                         'session_id': session.id,
-                        'course': session.course.name,
+                        'course': session.course.courseName,
                         'session_date': session.session_date,
                         'start_time': session.start_time,
                         'end_time': session.end_time,
