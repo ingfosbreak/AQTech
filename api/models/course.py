@@ -9,7 +9,7 @@ class Course(models.Model):
 
     name = models.CharField(max_length=100)
     description = models.TextField()
-    type = models.CharField(max_length=10, choices=TYPE_CHOICES, default='unrestricted')
+    type = models.CharField(max_length=20, choices=TYPE_CHOICES, default='unrestricted')
     min_age = models.IntegerField(null=True)
     max_age = models.IntegerField(null=True)
     quota = models.IntegerField(default=10)

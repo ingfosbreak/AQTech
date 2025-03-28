@@ -6,7 +6,7 @@ from api.serializers.course_serializers import CourseSerializer, CoursePriceSeri
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
-from api.models import Course, Type
+from api.models import Course
 from api.serializers.session_serializers import CourseSessionSerializer
 from rest_framework.permissions import IsAuthenticated
 
@@ -31,27 +31,27 @@ class CoursePriceListView(ListAPIView):
     queryset = Course.objects.all()
     serializer_class = CoursePriceSerializer
 
-class CourseCreateView(APIView):
-    def post(self, request, *args, **kwargs):
-        # Ensure `typeId` is present in the request data
-        type_id = request.data.get("typeId")
-        if not type_id:
-            return Response({"error": "typeId is required"}, status=status.HTTP_400_BAD_REQUEST)
+# class CourseCreateView(APIView):
+#     def post(self, request, *args, **kwargs):
+#         # Ensure `typeId` is present in the request data
+#         type_id = request.data.get("typeId")
+#         if not type_id:
+#             return Response({"error": "typeId is required"}, status=status.HTTP_400_BAD_REQUEST)
 
-        try:
-            type = Type.objects.get(id=type_id)  # Fetch the type by ID
-        except type.DoesNotExist:
-            return Response({"error": "Invalid type ID"}, status=status.HTTP_400_BAD_REQUEST)
+#         try:
+#             type = Type.objects.get(id=type_id)  # Fetch the type by ID
+#         except type.DoesNotExist:
+#             return Response({"error": "Invalid type ID"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Attach type to the request data and validate the serializer
-        request.data["type"] = type.id  # Attach the type ID to the data
-        serializer = CoursePriceSerializer(data=request.data)
+#         # Attach type to the request data and validate the serializer
+#         request.data["type"] = type.id  # Attach the type ID to the data
+#         serializer = CoursePriceSerializer(data=request.data)
 
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+#         if serializer.is_valid():
+#             serializer.save()
+#             return Response(serializer.data, status=status.HTTP_201_CREATED)
         
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 class CourseProgressAPIView(APIView):
     # permission_classes = [IsAuthenticated]

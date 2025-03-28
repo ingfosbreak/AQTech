@@ -1,15 +1,15 @@
 from rest_framework import serializers
-from api.models import Course, Type
+from api.models import Course, Category
 
 class CourseSerializer(serializers.ModelSerializer):
-    type = serializers.PrimaryKeyRelatedField(queryset=Type.objects.all())  # Accepts typeId
+    category = serializers.PrimaryKeyRelatedField(queryset=Category.objects.all())  # Accepts typeId
 
     class Meta:
         model = Course
         fields = ["id", "courseName", "description", "type", "quota", "created_at"]
 
 class CoursePriceSerializer(serializers.ModelSerializer):
-    type = serializers.PrimaryKeyRelatedField(queryset=Type.objects.all())  # Accepts typeId
+    category = serializers.PrimaryKeyRelatedField(queryset=Category.objects.all())  # Accepts typeId
 
     class Meta:
         model = Course
