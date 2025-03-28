@@ -246,6 +246,39 @@ def assign_students_to_sessions(students, sessions):
     print(f"✅ Assigned students to sessions.")
 
 
+# ------------------------- Create TimeSlot -------------------------
+def create_timeslot(courses, num_timeslots=10):
+    """Create a list of timeslots for multiple courses, scheduling weekly in the future."""
+    timeslots = [
+        '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00'
+    ]
+    
+    # Start scheduling from next Monday
+    today = datetime.today()
+    days_until_monday = (7 - today.weekday()) % 7  # 0 if Monday, otherwise days until next Monday
+    first_timeslot_date = today + timedelta(days=days_until_monday)
+
+    for course in courses:
+        for i in range(num_timeslots):
+            start_time_str = random.choice(timeslots)
+            start_time = datetime.strptime(start_time_str, '%H:%M').time()
+            
+            # Example end time (assuming 1-hour sessions)
+            end_time = (datetime.combine(datetime.today(), start_time) + timedelta(hours=1)).time()
+            
+            # Calculate timeslot_date (weekly increment)
+            timeslot_date = first_timeslot_date + timedelta(weeks=i)
+            
+            # Create the timeslot object
+            Timeslot.objects.create(
+                course=course,
+                timeslot_date=timeslot_date,
+                start_time=start_time,
+                end_time=end_time
+            )
+        
+        print(f"✅ {num_timeslots} timeslots created for course {course.name}.")
+
 # ------------------------- Create Attendance -------------------------
 
 # Function to generate a random time between 10 AM and 5 PM
@@ -253,44 +286,34 @@ def random_time():
     start_time = datetime.strptime("10:00", "%H:%M")
     end_time = datetime.strptime("17:00", "%H:%M")
     
-    # Generate a random time within this range
     random_minutes = random.randint(0, int((end_time - start_time).total_seconds() / 60))
     random_datetime = start_time + timedelta(minutes=random_minutes)
     
     return random_datetime.strftime("%H:%M")
 
-def create_timeslot(course, start_date, num_timeslots=5):
-    """Create a list of timeslots for a given course starting from `start_date`."""
-    timeslots = [
-        '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00'
-    ]
-    
-    # Creating num_timeslots for each course
-    for i in range(num_timeslots):
-        start_time_str = random.choice(timeslots)
-        start_time = datetime.strptime(start_time_str, '%H:%M').time()
-        
-        # Example end time, assuming 1 hour session
-        end_time = (datetime.combine(datetime.today(), start_time) + timedelta(hours=1)).time()
-        
-        # Creating the timeslot object
-        Timeslot.objects.create(
-            course=course,
-            timeslot_date=start_date,
-            start_time=start_time,
-            end_time=end_time
-        )
 
 def create_attendance(sessions, teachers, students, timeslots):
     attendance_objs = []
+
+    # Ensure timeslots is not empty
+    if not timeslots:
+        print("⚠️ Warning: No timeslots available. Skipping attendance creation.")
+        return attendance_objs
+
+    # Ensure timeslots contain valid instances
+    valid_timeslots = Timeslot.objects.filter(id__in=[t.id for t in timeslots])
+
+    if not valid_timeslots.exists():
+        print("⚠️ Warning: No valid Timeslot instances found in the database.")
+        return attendance_objs
 
     for _ in range(20):  # Create at least 20 attendance records
         session = random.choice(sessions)
         teacher = random.choice(teachers)
         student = random.choice(students)
 
-        # Retrieve the Timeslot instance from the database
-        timeslot = Timeslot.objects.get(time=random.choice(timeslots))
+        # Select a valid timeslot from the database
+        timeslot = random.choice(valid_timeslots)
 
         # Randomly assign checked_date to a time between 10 AM and 5 PM
         checked_time_str = random_time()
@@ -307,7 +330,7 @@ def create_attendance(sessions, teachers, students, timeslots):
             teacher=teacher,
             student=student,
             timeslot=timeslot,  # Pass the Timeslot instance
-            status="absent",  # Default status can be 'absent', you can randomize this if needed
+            status=random.choice(["present", "absent"]),  # Randomize attendance status
             attendance_date=timezone.now().date(),
             start_time="11:00",  # Default start_time
             end_time="12:00",    # Default end_time
@@ -383,8 +406,9 @@ def populate_database():
     courses = create_categories_and_courses()
     teachers = create_teachers(users)
     students = create_students(users)  # ✅ Create students first
-    timeslots = create_timeslot
     sessions = create_sessions(courses, teachers, students)  # ✅ Create unique sessions per student
+    assign_students_to_sessions(students, sessions)
+    timeslots = create_timeslot(courses)
 
     # Now pass the timeslots to the create_attendance function
     create_attendance(sessions, teachers, students, timeslots)
