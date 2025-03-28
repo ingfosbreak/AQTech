@@ -1,7 +1,7 @@
 from rest_framework import serializers
-from api.models import Type
+from api.models import Category
 
 class TypeSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Type
-        fields = ["id", "typeName"]
+        model = Category
+        fields = ["id", "categoryName"]

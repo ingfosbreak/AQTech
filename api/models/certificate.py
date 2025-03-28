@@ -5,8 +5,8 @@ from .student import Student
 
 class Certificate(models.Model):
     STATUS_CHOICES = [
-        ('issued', 'Issued'),
-        ('revoked', 'Revoked'),
+        ('issued', 'issued'),
+        ('revoked', 'revoked'),
     ]
 
     ## ผูกกับประเภทคอร์ส
