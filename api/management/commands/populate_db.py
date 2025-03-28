@@ -4,9 +4,18 @@ from django.utils import timezone
 from django.contrib.auth import get_user_model
 from django.utils.timezone import now
 from api.models import (
-    User, Teacher, Student, Type, Course, CourseSession, 
-    Attendance, Receipt, Certificate, Storage
+    User, Teacher, Student, Category, Course, CourseSession, 
+    Attendance, Receipt, Certificate, Storage, Timeslot
 )
+from api.models.category import Category
+from django.core.management.base import BaseCommand
+
+class Command(BaseCommand):
+    help = 'Populate the database with sample data'
+
+    def handle(self, *args, **kwargs):
+        populate_database()
+        self.stdout.write("Database populated successfully!")
 
 User = get_user_model()  # Use custom User model if applicable
 
@@ -14,10 +23,21 @@ User = get_user_model()  # Use custom User model if applicable
 def create_users():
     users = [
         {"username": "staff", "password": "admin123", "email": "staff@example.com", "role": "staff", "join_date": timezone.now()},
-        {"username": "teacher1", "password": "pass123", "email": "teacher1@example.com", "role": "teacher", "join_date": timezone.now() - timedelta(days=100)},
-        {"username": "teacher2", "password": "pass123", "email": "teacher2@example.com", "role": "teacher", "join_date": timezone.now() - timedelta(days=90)},
-        {"username": "parent1", "password": "pass123", "email": "parent1@example.com", "role": "user", "join_date": timezone.now() - timedelta(days=90)},
+        {"username": "teacher1", "password": "pass123", "email": "teacher1@example.com", "role": "teacher", "join_date": timezone.now() - timedelta(days=100), "contact": "1234567890"},
+        {"username": "teacher2", "password": "pass123", "email": "teacher2@example.com", "role": "teacher", "join_date": timezone.now() - timedelta(days=90), "contact": "0987654321"},
+        {"username": "parent1", "password": "pass123", "email": "parent1@example.com", "role": "user", "join_date": timezone.now() - timedelta(days=90), "contact": "1122334455"},
     ]
+
+    # Adding 8 more teachers
+    for i in range(3, 11):  # Start from teacher3 to teacher10
+        users.append({
+            "username": f"teacher{i}",
+            "password": "pass123",
+            "email": f"teacher{i}@example.com",
+            "role": "teacher",
+            "join_date": timezone.now() - timedelta(days=100 - i * 10),  # Stagger the join dates for variety
+            "contact": f"555123456{i}",  # Example phone number format
+        })
 
     # Generate 10 "user" role accounts
     for i in range(1, 11):
@@ -27,6 +47,7 @@ def create_users():
             "email": f"user{i}@example.com",
             "role": "user",
             "join_date": timezone.now() - timedelta(days=i * 10),
+            "contact": f"555123456{i}",  # Example phone number format
         })
 
     user_objs = []
@@ -36,7 +57,8 @@ def create_users():
             defaults={
                 "email": user["email"],
                 "role": user["role"],
-                "date_joined": user["join_date"],
+                "join_date": user["join_date"],
+                "contact": user.get("contact", ""),  # Default to an empty string if no contact is provided
             }
         )
         obj.set_password(user["password"])
@@ -46,12 +68,15 @@ def create_users():
     print(f"✅ Created or updated {len(user_objs)} users.")
     return user_objs
 
-
-
-def create_types_and_courses():
-    types = ["AquaKids", "Playsound", "Other"]
-    type_objs = {name: Type.objects.get_or_create(typeName=name)[0] for name in types}
+# ------------------------- Create Category & Course -------------------------
+def create_categories_and_courses():
+    # Categories for the courses
+    categories_data = ["AquaKids", "Playsound", "Other"]
     
+    # Create categories and store their objects in a dictionary
+    category_objs = {name: Category.objects.get_or_create(categoryName=name)[0] for name in categories_data}
+
+    # Courses Data
     courses_data = {
         "AquaKids": [
             "Swimming Baby Class",
@@ -90,21 +115,55 @@ def create_types_and_courses():
             "Public Speaking",
         ],
     }
-    
+
+    # Now we are creating the courses
     course_objs = []
-    for type_name, courses in courses_data.items():
+    for category_name, courses in courses_data.items():
+        category = category_objs[category_name]
+        
         for course_name in courses:
             course, created = Course.objects.update_or_create(
-                courseName=course_name,
-                defaults={"description": f"This is a {type_name} course.", "type": type_objs[type_name], "created_at": now(), "price": 3500},
+                name=course_name,
+                defaults={
+                    "description": f"This is a {category_name} course.",
+                    "type": "unrestricted",  # Default type set to 'unrestricted'
+                    "min_age": 5,  # Example value, this can be adjusted
+                    "max_age": 12,  # Example value, this can be adjusted
+                    "quota": 10,  # Example value, this can be adjusted
+                    "category": category,
+                    "created_at": datetime.now(),
+                    "price": 3500,  # Default price
+                }
             )
             course_objs.append(course)
-    
-    print(f"✅ Created {len(type_objs)} Types & {len(course_objs)} Courses.")
+
+    print(f"✅ Created {len(category_objs)} Categories & {len(course_objs)} Courses.")
     return course_objs
 
+# ------------------------- Create Teachers -------------------------
 def create_teachers(users):
-    teachers = [Teacher.objects.create(user=u, name=u.username) for u in users if u.role == "teacher"]
+    # Ensure that we have categories to assign to the teachers
+    categories = Category.objects.all()
+    
+    if not categories:
+        print("⚠️ No categories found. Please create categories first.")
+        return []
+    
+    # Create teachers
+    teachers = []
+    for u in users:
+        if u.role == "teacher":
+            # Assign a category to the teacher, for example, random or specific category
+            # Here, we assign the first category as a default. You can modify this logic as per your needs
+            category = categories.first()  # Example: You can modify this logic to assign categories dynamically
+
+            teacher = Teacher.objects.create(
+                user=u,
+                name=u.username,
+                category=category,  # Assign the category to the teacher
+                status='active'  # Default status can be 'active'
+            )
+            teachers.append(teacher)
     
     if not teachers:
         print("⚠️ No teachers created! Check user roles.")
@@ -113,10 +172,15 @@ def create_teachers(users):
     return teachers
 
 
+# ------------------------- Create Student -------------------------
 def create_students(users):
     student_names = [
         "Alice", "Bob", "Charlie", "Daisy", "Ethan", "Fiona", "George", "Hannah",
-        "Isaac", "Jack", "Katie", "Leo", "Mia", "Nathan"
+        "Isaac", "Jack", "Katie", "Leo", "Mia", "Nathan", "Olivia", "Paul", "Quincy",
+        "Rachel", "Sophia", "Tom", "Uma", "Victor", "Wendy", "Xander", "Yara", "Zane",
+        "Amelia", "Ben", "Cathy", "David", "Ella", "Freddie", "Gina", "Henry", "Ivy",
+        "James", "Kara", "Liam", "Megan", "Nina", "Oscar", "Penny", "Quinn", "Reuben",
+        "Sarah", "Toby", "Ursula", "Vera", "Walter", "Xena", "Yasmine", "Zara"
     ]
     
     students = []
@@ -124,19 +188,25 @@ def create_students(users):
 
     for u in users:
         if u.role == "user":
-            num_students = 2 if name_index < 10 else 1  # Some users have 2 students
+            num_students = 2 if name_index < 20 else 1  # Some users have 2 students
             for _ in range(num_students):
-                if name_index >= len(student_names):  # Prevent index error
+                if name_index >= len(student_names):  # Prevent index error if we run out of names
                     break
-                student = Student.objects.create(user=u, name=student_names[name_index])
+                # Create a student with a birthdate (e.g., set it to today or any date you prefer)
+                birthdate = timezone.now().date()  # You can replace this with another logic for birthdate
+                student = Student.objects.create(
+                    user=u, 
+                    name=student_names[name_index], 
+                    birthdate=birthdate
+                )
                 students.append(student)
                 name_index += 1  # Move to the next name
 
     print(f"✅ Created {len(students)} students.")
     return students
 
-
-def create_course_sessions(courses, teachers, students):
+# ------------------------- Create Session -------------------------
+def create_sessions(courses, teachers, students):
     if not teachers:
         print("⚠️ No teachers available! Skipping session creation.")
         return []
@@ -145,15 +215,16 @@ def create_course_sessions(courses, teachers, students):
 
     for student in students:
         num_sessions = random.randint(1, 3)  # Each student gets 1 to 3 sessions
-        for _ in range(num_sessions):
+        for i in range(num_sessions):
+            # Generate a name for the session
+            session_name = f"{student.name}'s {random.choice(courses).name} Session {i+1}"
+
+            # Create the session
             session = CourseSession.objects.create(
-                course=random.choice(courses),
-                teacher=random.choice(teachers),  # ✅ Safe because teachers exist
-                student=student,  
-                session_date=timezone.now() + timedelta(days=random.randint(1, 30)),
-                total_quota=1,
-                start_time="11:00",
-                end_time="12:00",
+                course=random.choice(courses),  # Random course
+                student=student,  # The current student
+                name=session_name,  # The generated session name
+                total_quota=1,  # Example quota (can be adjusted as needed)
             )
             sessions.append(session)
 
@@ -164,9 +235,13 @@ def create_course_sessions(courses, teachers, students):
 # ------------------------- Assign Students to Course Sessions -------------------------
 def assign_students_to_sessions(students, sessions):
     for student in students:
+        # Pick a random number of sessions (at least 1, at most the total number of sessions)
         assigned_sessions = random.sample(sessions, k=random.randint(1, len(sessions)))
-        student.sessions.set(assigned_sessions)  # Assign Many-to-Many sessions
-        student.save()
+
+        # Assign each session to the student
+        for session in assigned_sessions:
+            session.student = student  # Assign the student to the session
+            session.save()
 
     print(f"✅ Assigned students to sessions.")
 
@@ -184,26 +259,65 @@ def random_time():
     
     return random_datetime.strftime("%H:%M")
 
-def create_attendance(sessions, teachers, students):
-    # Create Attendance records with random checked_date and times
-    attendance_objs = [
-        Attendance.objects.create(
-            session=random.choice(sessions),
-            teacher=random.choice(teachers),
-            student=random.choice(students),
-            status="absent",
-            attendance_date=timezone.now(),
-            # Randomly assign checked_date to a time between 10 AM and 5 PM
-            checked_date=timezone.now().replace(hour=int(random_time().split(":")[0]), minute=int(random_time().split(":")[1]), second=0, microsecond=0),
-            start_time="11:00",
-            end_time="12:00",
-        )
-        for _ in range(20)  # Create at least 20 records
+def create_timeslot(course, start_date, num_timeslots=5):
+    """Create a list of timeslots for a given course starting from `start_date`."""
+    timeslots = [
+        '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00'
     ]
+    
+    # Creating num_timeslots for each course
+    for i in range(num_timeslots):
+        start_time_str = random.choice(timeslots)
+        start_time = datetime.strptime(start_time_str, '%H:%M').time()
+        
+        # Example end time, assuming 1 hour session
+        end_time = (datetime.combine(datetime.today(), start_time) + timedelta(hours=1)).time()
+        
+        # Creating the timeslot object
+        Timeslot.objects.create(
+            course=course,
+            timeslot_date=start_date,
+            start_time=start_time,
+            end_time=end_time
+        )
+
+def create_attendance(sessions, teachers, students, timeslots):
+    attendance_objs = []
+
+    for _ in range(20):  # Create at least 20 attendance records
+        session = random.choice(sessions)
+        teacher = random.choice(teachers)
+        student = random.choice(students)
+
+        # Retrieve the Timeslot instance from the database
+        timeslot = Timeslot.objects.get(time=random.choice(timeslots))
+
+        # Randomly assign checked_date to a time between 10 AM and 5 PM
+        checked_time_str = random_time()
+        checked_date = timezone.now().replace(
+            hour=int(checked_time_str.split(":")[0]),
+            minute=int(checked_time_str.split(":")[1]),
+            second=0,
+            microsecond=0
+        )
+
+        # Create Attendance record
+        attendance = Attendance.objects.create(
+            session=session,
+            teacher=teacher,
+            student=student,
+            timeslot=timeslot,  # Pass the Timeslot instance
+            status="absent",  # Default status can be 'absent', you can randomize this if needed
+            attendance_date=timezone.now().date(),
+            start_time="11:00",  # Default start_time
+            end_time="12:00",    # Default end_time
+            checked_date=checked_date,
+        )
+
+        attendance_objs.append(attendance)
 
     print(f"✅ Created {len(attendance_objs)} attendance records.")
     return attendance_objs
-
 
 # ------------------------- Create Storage Items -------------------------
 def create_storage():
@@ -266,13 +380,14 @@ def populate_database():
         return
     
     users = create_users()
-    courses = create_types_and_courses()
+    courses = create_categories_and_courses()
     teachers = create_teachers(users)
     students = create_students(users)  # ✅ Create students first
-    sessions = create_course_sessions(courses, teachers, students)  # ✅ Create unique sessions per student
-    create_attendance(sessions, teachers, students)
-    create_storage()
-    # create_receipts(students, sessions)
-    # create_certificates(users, courses)
+    timeslots = create_timeslot
+    sessions = create_sessions(courses, teachers, students)  # ✅ Create unique sessions per student
+
+    # Now pass the timeslots to the create_attendance function
+    create_attendance(sessions, teachers, students, timeslots)
+
     print("🎉 Database successfully populated!")
 
