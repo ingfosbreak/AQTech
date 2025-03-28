@@ -3,12 +3,11 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    command: poetry run python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - ./:/app
     ports:
       - 8000:8000
-    depends_on:
-      - db
-    networks:
-      - service
   nginx:
     image: nginx
     container_name: nginx
@@ -18,23 +17,3 @@ services:
       - 80:80
     depends_on:
       - backend
-  db:
-    image: mysql:8.0
-    container_name: mysql
-    environment:
-      MYSQL_ROOT_PASSWORD: AQpassword
-      MYSQL_DATABASE: AQdatabase
-      MYSQL_USER: superadmin
-      MYSQL_PASSWORD: superpassword
-    volumes:
-      - mysql_data:/var/lib/mysql
-    ports:
-      - 3306:3306
-    networks:
-      - service
-
-networks:
-  service:
-
-volumes:
-  mysql_data: {}
