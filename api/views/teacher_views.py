@@ -144,3 +144,25 @@ class TeacherDetailView(APIView):
 
         except Teacher.DoesNotExist:
             return JsonResponse({'error': 'Teacher not found'}, status=status.HTTP_404_NOT_FOUND)
+
+class TeacherStatusUpdateView(APIView):
+    def patch(self, request, pk):
+        try:
+            teacher = Teacher.objects.get(pk=pk)
+        except Teacher.DoesNotExist:
+            return Response({"detail": "Teacher not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+        # Get the new status from the request
+        new_status = request.data.get("status")
+        
+        # Validate the status
+        if new_status not in ['active', 'inactive']:
+            return Response({"detail": "Invalid status value"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Update the teacher's status
+        teacher.status = new_status
+        teacher.save()
+
+        # Return the updated teacher data
+        serializer = TeacherSerializer(teacher)
+        return Response(serializer.data, status=status.HTTP_200_OK)

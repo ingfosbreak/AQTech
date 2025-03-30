@@ -7,7 +7,7 @@ from api.views.session_views import CourseTypeEnrollmentView, SessionProgressDet
 from api.views.static_views import AttendanceHeatmapView, AttendanceLogView, CoursePerformanceView, RecentAttendanceView
 from api.views.student_views import AddStudentView, UserStudentListView
 from api.views.user_views import ProfileView
-from api.views.teacher_views import CreateUserTeacherView, TeacherDetailView, TeacherUsernameListView
+from api.views.teacher_views import CreateUserTeacherView, TeacherDetailView, TeacherStatusUpdateView, TeacherUsernameListView
 from api.views.student_views import AddStudentView, StudentDetailView, StudentUsernameListView, StudentCertificateListView
 from api.views import CreatePaymentIntentView, StripeWebhookAPIView
 from api.views.storage_views import StorageChangeImage
@@ -37,6 +37,7 @@ urlpatterns = [
     path('teachers/create/', CreateUserTeacherView.as_view(), name="teacher-create"),
     path('teachers/', TeacherListView.as_view(), name="teacher-list"),
     path('teachers/<int:teacher_id>/', TeacherDetailView.as_view(), name="teacher-list"),
+    path('teachers/status/<int:pk>/', TeacherStatusUpdateView.as_view(), name='teacher-status-update'),
     path('teachersreforge/', TeacherUsernameListView.as_view(), name="teacher-list-reforged"),
     path('sessions/create/', SessionView.as_view(), name="session-create"),
     path("sessions/progress/", SessionProgressView.as_view(), name="session-progress"),
