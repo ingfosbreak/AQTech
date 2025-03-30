@@ -3,7 +3,7 @@ from django.urls import path
 # from api.views.storage_views import StorageListView, StorageDetailView
 from api.views import StorageListView, StorageDetailView, StaffUserView, UserUpdateView, UserDetailView, UserListView, StudentCreateView, StudentListView, TeacherCreateView, TeacherListView, SessionView, UserInfoView, VerifyTokenView, CombinedCountView, PieChartStaticView
 from api.views.category_view import CategoryListView
-from api.views.course_views import CourseCreateView, CourseListView, CourseDetailView, CoursePriceListView, StudentCourseListView
+from api.views.course_views import CourseCreateView, CourseEnrolledView, CourseListView, CourseDetailView, CoursePriceListView, StudentCourseListView
 from api.views.session_views import CourseTypeEnrollmentView, SessionProgressDetailView, SessionProgressView
 from api.views.static_views import AttendanceHeatmapView, AttendanceLogView, CoursePerformanceView, RecentAttendanceView
 from api.views.student_views import AddStudentView, UserStudentListView
@@ -51,6 +51,7 @@ urlpatterns = [
     path('courses/create/', CourseCreateView.as_view(), name='course-create'),  # POST /courses/create/
     path("courses/enrolled/", StudentCourseListView.as_view(), name="completed-courses"),
     path('course-performance/', CoursePerformanceView.as_view(), name='course-performance'),
+    path('enrolled-courses/', CourseEnrolledView.as_view(), name='enrolled-course'),  # URL for fetching course details
     path("profile/", ProfileView.as_view(), name="profile"),
     path("certificates-upload/", CerificateListView.as_view(), name="certificate-upload"),
     path("certificates-all/<int:pk>", AllCertificate.as_view(), name="certificate-upload"),

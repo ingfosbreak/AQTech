@@ -3,7 +3,7 @@ from api.models import Course
 from api.models.category import Category
 from api.models.session import CourseSession
 from api.models.student import Student
-from api.serializers.course_serializers import CourseSerializer, CoursePriceSerializer
+from api.serializers.course_serializers import CourseDetailedSerializer, CourseSerializer, CoursePriceSerializer
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
@@ -82,3 +82,7 @@ class StudentCourseListView(ListAPIView):
             return Course.objects.none()  # Return empty queryset if no student ID is provided
 
         return Course.objects.filter(sessions__student_id=student_id).distinct()
+    
+class CourseEnrolledView(ListAPIView):
+    queryset = Course.objects.all().prefetch_related('assigns__teacher')  # Eagerly load teachers through TeacherAssignment
+    serializer_class = CourseDetailedSerializer
