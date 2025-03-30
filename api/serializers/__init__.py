@@ -8,3 +8,4 @@ from .type_serializers import TypeSerializer
 from .course_serializers import CourseSerializer
 from .certificate_serizlizers import CertificateSerializer
 from .attendance_serializers import AttendanceSerializer
+from .category_serializers import CategorySerializer

@@ -2,6 +2,7 @@ from django.urls import path
 # from .views import Home
 # from api.views.storage_views import StorageListView, StorageDetailView
 from api.views import StorageListView, StorageDetailView, StaffUserView, UserUpdateView, UserDetailView, UserListView, StudentCreateView, StudentListView, TeacherCreateView, TeacherListView, SessionView, UserInfoView, VerifyTokenView, CombinedCountView, PieChartStaticView
+from api.views.category_view import CategoryListView
 from api.views.course_views import CourseCreateView, CourseListView, CourseDetailView, CoursePriceListView, StudentCourseListView
 from api.views.session_views import CourseTypeEnrollmentView, SessionProgressDetailView, SessionProgressView
 from api.views.static_views import AttendanceHeatmapView, AttendanceLogView, CoursePerformanceView, RecentAttendanceView
@@ -65,4 +66,5 @@ urlpatterns = [
     path("attendacne-buy/", AttendanceListView.as_view(), name="attendance-buy"),
     path("attendacne-but-modify/", AttendanceListModifyView.as_view(), name="attendance-buy-modify"),
     path('course-enrollment/', CourseTypeEnrollmentView.as_view(), name='api_course_sessions_grouped_by_type'),
+    path('categories/', CategoryListView.as_view(), name='category-list'),
 ]
