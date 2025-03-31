@@ -3,7 +3,8 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from api.permissions import IsAdmin
-from api.models import User, Teacher
+from api.models import User, Teacher, Category
+from django.contrib.auth.hashers import make_password
 from api.serializers import TeacherSerializer, UserSerializer
 from django.db import transaction
 from django.http import JsonResponse
@@ -55,7 +56,9 @@ class CreateUserTeacherView(APIView):
             "username": request.data.get("username"),
             "password": request.data.get("password"),
             "contact": request.data.get("contact"),
-            "role": "teacher"  # Ensure the user is always a teacher
+            "role": "teacher",  # Ensure the user is always a teacher
+            "status": request.data.get("status"),
+
         }
 
         user_serializer = UserSerializer(data=user_data)
@@ -88,6 +91,62 @@ class CreateUserTeacherView(APIView):
             return Response(teacher_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         return Response(user_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+class NewCreateTeacherUserView(APIView):
+    
+    @transaction.atomic
+    def post(self, request):
+        try:
+            # Extract user data from request
+            first_name = request.data.get("first_name")
+            last_name = request.data.get("last_name")
+            username = request.data.get("username")
+            password = request.data.get("password")
+            contact = request.data.get("contact")
+            category_id = request.data.get("category")  # Expecting category ID
+            status_value = request.data.get("status", "active")
+
+            # Validate required fields
+            if not all([first_name, last_name, username, password, category_id, contact]):
+                return Response({"error": "Missing required fields"}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Ensure category exists
+            try:
+                category = Category.objects.get(id=category_id)
+            except Category.DoesNotExist:
+                return Response({"error": "Invalid category ID"}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Create User
+            user = User.objects.create(
+                first_name=first_name,
+                last_name=last_name,
+                username=username,
+                password=make_password(password),  # Hash password for security
+                contact=contact,
+                role="teacher",  # Set role as 'teacher'
+            )
+
+            # Ensure user isn't already assigned as a teacher
+            if Teacher.objects.filter(user=user).exists():
+                transaction.set_rollback(True)
+                return Response(
+                    {"error": "This user is already assigned as a teacher."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            # Create Teacher
+            Teacher.objects.create(
+                user=user,
+                category=category,
+                status=status_value,
+                name=f"{first_name} {last_name}"
+            )
+
+            return Response({"message": "User and teacher created successfully"}, status=status.HTTP_201_CREATED)
+
+        except Exception as e:
+            transaction.set_rollback(True)
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
 
 class TeacherListView(APIView):

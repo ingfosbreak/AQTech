@@ -8,7 +8,7 @@ from api.views.session_views import CourseTypeEnrollmentView, SessionProgressDet
 from api.views.static_views import AttendanceHeatmapView, AttendanceLogView, CoursePerformanceView, RecentAttendanceView
 from api.views.student_views import AddStudentView, UserStudentListView
 from api.views.user_views import ProfileView
-from api.views.teacher_views import CreateUserTeacherView, TeacherDetailView, TeacherStatusUpdateView, TeacherUsernameListView
+from api.views.teacher_views import CreateUserTeacherView, TeacherDetailView, TeacherStatusUpdateView, TeacherUsernameListView, NewCreateTeacherUserView
 from api.views.student_views import AddStudentView, StudentDetailView, StudentUsernameListView, StudentCertificateListView
 from api.views import CreatePaymentIntentView, StripeWebhookAPIView
 from api.views.storage_views import StorageChangeImage
@@ -68,4 +68,8 @@ urlpatterns = [
     path("attendacne-but-modify/", AttendanceListModifyView.as_view(), name="attendance-buy-modify"),
     path('course-enrollment/', CourseTypeEnrollmentView.as_view(), name='api_course_sessions_grouped_by_type'),
     path('categories/', CategoryListView.as_view(), name='category-list'),
+
+
+    ## new api ink and kevin
+    path('new/teachers/create/', NewCreateTeacherUserView.as_view(), name="new-teacher-create"),
 ]
