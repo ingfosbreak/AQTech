@@ -69,7 +69,12 @@ class UserDetailView(APIView):
 
     def get(self, request, user_id):
         try:
-            user = User.objects.prefetch_related("students").get(id=user_id)  # Optimize query
+            # Prefetch teachers through the related 'assigns' in TeacherAssignment for each course
+            user = User.objects.prefetch_related(
+                'students__sessions__course',  # Prefetch course data for each session
+                'students__sessions__course__assigns__teacher',  # Prefetch teacher through TeacherAssignment
+            ).get(id=user_id)
+
             serializer = UserListSerializer(user)
             return Response(serializer.data, status=status.HTTP_200_OK)
         except User.DoesNotExist:

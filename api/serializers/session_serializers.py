@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from api.models import CourseSession
 from api.models.attendance import Attendance
-from .course_serializers import CourseSerializer
+from .course_serializers import CourseDetailedSerializer, CourseSerializer
 from .teacher_serializers import TeacherSerializer
 # from .student_serializers import StudentSerializer
 from api.models import Course, Teacher, Student
@@ -20,11 +20,14 @@ class CourseSessionSerializer(serializers.ModelSerializer):
         ]
 
 class CourseSessionListSerializer(serializers.ModelSerializer):
-    courseName = serializers.CharField(source="course.courseName", read_only=True)  # ✅ Extracts only courseName
+    # Include the course details but exclude start_time and end_time
+    course = CourseDetailedSerializer(read_only=True)
 
     class Meta:
         model = CourseSession
-        fields = ["courseName"]  # ✅ Returns only courseName
+        fields = [
+            "id", "name", "total_quota", "course"
+        ]
 
 class CourseProgressSerializer(serializers.ModelSerializer):
     totalClasses = serializers.SerializerMethodField()
