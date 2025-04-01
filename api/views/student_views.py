@@ -5,7 +5,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from api.permissions import IsAdmin
 from api.models import User, Student
 from api.serializers import StudentSerializer
-from api.serializers.student_serializers import StudentListSerializer
+from api.serializers.student_serializers import StudentListSerializer, StudentStatusUpdateSerializer
 from rest_framework.permissions import IsAuthenticated
 from django.http import JsonResponse
 
@@ -135,6 +135,30 @@ class UserStudentListView(APIView):
         serializer = StudentListSerializer(students, many=True)
         return Response(serializer.data)
 
+class StudentStatusUpdateView(APIView):
+    # permission_classes = [IsAuthenticated]  # Only authenticated users can access this view
+
+    def patch(self, request, pk, *args, **kwargs):
+        """
+        Handle the PATCH request to update the status of a student.
+        This allows changing the status to either 'active' or 'inactive'.
+        """
+        try:
+            # Get the student instance by primary key (pk)
+            student = Student.objects.get(pk=pk)
+        except Student.DoesNotExist:
+            return Response({"detail": "Student not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        # Create a serializer with the student instance and the data from the request
+        serializer = StudentStatusUpdateSerializer(student, data=request.data, partial=True)
+        
+        if serializer.is_valid():
+            # If the data is valid, save the new status
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
 # class StudentCountView(APIView):
 #     def get(self, request):
 #         active_students = Student.objects.filter(is_active=True).count()

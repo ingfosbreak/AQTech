@@ -194,10 +194,15 @@ def create_students(users):
                     break
                 # Create a student with a birthdate (e.g., set it to today or any date you prefer)
                 birthdate = timezone.now().date()  # You can replace this with another logic for birthdate
+                
+                # Set all students' status to 'active'
+                status = 'active'  # All students will have the 'active' status
+
                 student = Student.objects.create(
                     user=u, 
                     name=student_names[name_index], 
-                    birthdate=birthdate
+                    birthdate=birthdate,
+                    status=status  # Set the status here to 'active'
                 )
                 students.append(student)
                 name_index += 1  # Move to the next name

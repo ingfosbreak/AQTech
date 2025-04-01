@@ -6,7 +6,7 @@ from api.views.category_view import CategoryListView
 from api.views.course_views import CourseCreateView, CourseEnrolledView, CourseListView, CourseDetailView, CoursePriceListView, StudentCourseListView
 from api.views.session_views import CourseTypeEnrollmentView, SessionProgressDetailView, SessionProgressView
 from api.views.static_views import AttendanceHeatmapView, AttendanceLogView, CoursePerformanceView, RecentAttendanceView
-from api.views.student_views import AddStudentView, UserStudentListView
+from api.views.student_views import AddStudentView, StudentStatusUpdateView, UserStudentListView
 from api.views.user_views import ProfileView
 from api.views.teacher_views import CreateUserTeacherView, TeacherDetailView, TeacherStatusUpdateView, TeacherUsernameListView, NewCreateTeacherUserView
 from api.views.student_views import AddStudentView, StudentDetailView, StudentUsernameListView, StudentCertificateListView
@@ -30,6 +30,7 @@ urlpatterns = [
     path('user/<int:user_id>/', UserDetailView.as_view(), name="user-detail"),
     path('user/students/', UserStudentListView.as_view(), name="user-students"),
     path('students/create/', StudentCreateView.as_view(), name="student-create"),
+    path('students/status/<int:pk>/', StudentStatusUpdateView.as_view(), name='update_student_status'),
     path("students/add/<int:user_id>/", AddStudentView.as_view(), name="add-student"),
     path('students/', StudentListView.as_view(), name="student-list"),
     path('studentsreforge/', StudentUsernameListView.as_view(), name="student-list-reforged"),
