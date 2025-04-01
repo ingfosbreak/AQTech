@@ -5,7 +5,7 @@ from django.contrib.auth import get_user_model
 from django.utils.timezone import now
 from api.models import (
     User, Teacher, Student, Category, Course, CourseSession, 
-    Attendance, Receipt, Certificate, Storage, Timeslot
+    Attendance, Receipt, Certificate, Storage, Timeslot, TeacherAssignment
 )
 from api.models.category import Category
 from django.core.management.base import BaseCommand
@@ -14,6 +14,7 @@ class Command(BaseCommand):
     help = 'Populate the database with sample data'
 
     def handle(self, *args, **kwargs):
+        create_teacher_assignments()
         populate_database()
         self.stdout.write("Database populated successfully!")
 
@@ -391,6 +392,32 @@ def create_certificates(users, courses):
     print(f"✅ Created {len(certificates)} certificates.")
     return certificates
 
+def create_teacher_assignments():
+    """Create TeacherAssignment records by assigning teachers to courses with matching categories."""
+    courses = list(Course.objects.all())
+
+    if not courses:
+        print("No courses available to assign.")
+        return
+
+    assignments = []
+    
+    for course in courses:
+        # Get teachers from the same category as the course
+        eligible_teachers = list(Teacher.objects.filter(category=course.category))
+        
+        if not eligible_teachers:
+            print(f"No teachers available for course: {course.name} (Category: {course.category})")
+            continue
+        
+        teacher = random.choice(eligible_teachers)  # Assign a random eligible teacher
+        assignments.append(TeacherAssignment(course=course, teacher=teacher))
+
+    if assignments:
+        TeacherAssignment.objects.bulk_create(assignments)
+        print(f"Created {len(assignments)} teacher assignments.")
+    else:
+        print("No valid teacher assignments could be made.")
 
 # ------------------------- Run All Functions -------------------------
 def is_database_populated():

@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from api.permissions import IsAdmin
-from api.models import User, Teacher, Category
+from api.models import User, Teacher, Category, TeacherAssignment
 from django.contrib.auth.hashers import make_password
 from api.serializers import TeacherSerializer, UserSerializer
 from django.db import transaction
@@ -225,3 +225,37 @@ class TeacherStatusUpdateView(APIView):
         # Return the updated teacher data
         serializer = TeacherSerializer(teacher)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+class NewTeacherDetailView(APIView):
+    
+    def get(self, request, id):
+        try:
+            teacher = Teacher.objects.get(id=id)
+        except Teacher.DoesNotExist:
+            return Response({"error": "Teacher not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        # Get assigned courses
+        assignments = TeacherAssignment.objects.filter(teacher=teacher)
+        classes = [
+            {
+                "id": assignment.course.id,
+                "name": assignment.course.name,
+                "description": assignment.course.description,
+                "type": assignment.course.type,
+                "min_age": assignment.course.min_age,
+                "max_age": assignment.course.max_age,
+            }
+            for assignment in assignments
+        ]
+
+        # Construct response
+        data = {
+            "id": teacher.id,
+            "name": teacher.name,
+            "contact": teacher.user.contact,
+            "category": teacher.category.categoryName,
+            "status": teacher.status,
+            "classes": classes,
+        }
+
+        return Response(data, status=status.HTTP_200_OK)
