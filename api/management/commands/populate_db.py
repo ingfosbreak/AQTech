@@ -14,7 +14,6 @@ class Command(BaseCommand):
     help = 'Populate the database with sample data'
 
     def handle(self, *args, **kwargs):
-        create_teacher_assignments()
         populate_database()
         self.stdout.write("Database populated successfully!")
 
@@ -441,6 +440,7 @@ def populate_database():
     sessions = create_sessions(courses, teachers, students)  # ✅ Create unique sessions per student
     assign_students_to_sessions(students, sessions)
     timeslots = create_timeslot(courses)
+    create_teacher_assignments()
 
     # Now pass the timeslots to the create_attendance function
     create_attendance(sessions, teachers, students, timeslots)

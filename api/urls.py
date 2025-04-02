@@ -8,7 +8,7 @@ from api.views.session_views import CourseTypeEnrollmentView, SessionProgressDet
 from api.views.static_views import AttendanceHeatmapView, AttendanceLogView, CoursePerformanceView, RecentAttendanceView
 from api.views.student_views import AddStudentView, StudentStatusUpdateView, UserStudentListView
 from api.views.user_views import ProfileView
-from api.views.teacher_views import CreateUserTeacherView, TeacherDetailView, TeacherStatusUpdateView, TeacherUsernameListView, NewCreateTeacherUserView, NewTeacherDetailView
+from api.views.teacher_views import CreateUserTeacherView, TeacherAssignmentView, TeacherDetailView, TeacherProfileView, TeacherStatusUpdateView, TeacherUsernameListView, NewCreateTeacherUserView, NewTeacherDetailView
 from api.views.student_views import AddStudentView, StudentDetailView, StudentUsernameListView, StudentCertificateListView
 from api.views import CreatePaymentIntentView, StripeWebhookAPIView
 from api.views.storage_views import StorageChangeImage
@@ -74,4 +74,6 @@ urlpatterns = [
     ## new api ink and kevin
     path('new/teachers/create/', NewCreateTeacherUserView.as_view(), name="new-teacher-create"),
     path('new/teachers/detail/<int:id>/', NewTeacherDetailView.as_view(), name="new-teacher-detail"),
+    path('teacher-profile/', TeacherProfileView.as_view(), name='teacher-profile'),
+    path('teacher-assignment/', TeacherAssignmentView.as_view(), name='teacher-assignment'),
 ]

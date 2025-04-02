@@ -1,3 +1,4 @@
+from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -8,6 +9,7 @@ from django.contrib.auth.hashers import make_password
 from api.serializers import TeacherSerializer, UserSerializer
 from django.db import transaction
 from django.http import JsonResponse
+from rest_framework.permissions import IsAuthenticated
 
 class TeacherCreateView(APIView):
     # authentication_classes = [JWTAuthentication]
@@ -259,3 +261,70 @@ class NewTeacherDetailView(APIView):
         }
 
         return Response(data, status=status.HTTP_200_OK)
+    
+class TeacherAssignmentView(APIView):
+    authentication_classes = [JWTAuthentication]
+
+    def get(self, request):
+        # Ensure the user is a teacher
+        user = request.user
+
+        if user.role != 'teacher':
+            return Response(
+                {"error": "Forbidden: User is not a teacher"},
+                status=403
+            )
+
+        teacher = request.user.teachers  # Get the teacher object linked to the user
+
+        # Get assigned courses
+        assignments = TeacherAssignment.objects.filter(teacher=teacher)
+        classes = [
+            {
+                "id": assignment.course.id,
+                "name": assignment.course.name,
+                "description": assignment.course.description,
+                "type": assignment.course.type,
+                "min_age": assignment.course.min_age,
+                "max_age": assignment.course.max_age,
+            }
+            for assignment in assignments
+        ]
+
+        # Construct response
+        data = {
+            "id": teacher.id,
+            "name": teacher.name,
+            "contact": teacher.user.contact,
+            "category": teacher.category.categoryName,
+            "status": teacher.status,
+            "classes": classes,
+        }
+
+        return Response(data, status=status.HTTP_200_OK)
+
+class TeacherProfileView(APIView):
+    authentication_classes = [JWTAuthentication]
+
+    def get(self, request):
+        user = request.user
+
+        if user.role != 'teacher':
+            return Response(
+                {"error": "Forbidden: User is not a teacher"},
+                status=403
+            )
+
+        teacher = get_object_or_404(Teacher, user=user)
+
+        # Serialize both the teacher and user
+        teacher_serializer = TeacherSerializer(teacher)
+        user_serializer = UserSerializer(user)
+
+        # Combine the data into one dictionary
+        data = {
+            'user': user_serializer.data,
+            'teacher': teacher_serializer.data
+        }
+
+        return Response(data)
