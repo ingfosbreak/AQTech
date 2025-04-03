@@ -3,7 +3,7 @@ from django.urls import path
 # from api.views.storage_views import StorageListView, StorageDetailView
 from api.views import StorageListView, StorageDetailView, StaffUserView, UserUpdateView, UserDetailView, UserListView, StudentCreateView, StudentListView, TeacherCreateView, TeacherListView, SessionView, UserInfoView, VerifyTokenView, CombinedCountView, PieChartStaticView
 from api.views.category_view import CategoryListView
-from api.views.course_views import CourseCreateView, CourseEnrolledView, CourseListView, CourseDetailView, CoursePriceListView, StudentCourseListView
+from api.views.course_views import CourseCreateView, CourseEnrolledView, CourseListView, CourseDetailView, CoursePriceListView, StudentCourseListView, NewUnitCourseDetailView, NewGetAddTeacherList, NewAddTeacherToCourse, NewRemoveTeacherFromCourse
 from api.views.session_views import CourseTypeEnrollmentView, SessionProgressDetailView, SessionProgressView
 from api.views.static_views import AttendanceHeatmapView, AttendanceLogView, CoursePerformanceView, RecentAttendanceView
 from api.views.student_views import AddStudentView, StudentStatusUpdateView, UserStudentListView
@@ -76,4 +76,9 @@ urlpatterns = [
     path('new/teachers/detail/<int:id>/', NewTeacherDetailView.as_view(), name="new-teacher-detail"),
     path('teacher-profile/', TeacherProfileView.as_view(), name='teacher-profile'),
     path('teacher-assignment/', TeacherAssignmentView.as_view(), name='teacher-assignment'),
+    path('new/courses/detail/<int:id>/', NewUnitCourseDetailView.as_view(), name="new-unit-course-detail"),
+    path('new/courses/add-teacher-list/<int:course_id>/', NewGetAddTeacherList.as_view(), name="new-add-teacher-list"),
+    path('new/courses/<int:course_id>/assign-teacher/', NewAddTeacherToCourse.as_view(), name="new-add-teacher"),
+    path('new/courses/<int:course_id>/<int:teacher_id>/remove-teacher/', NewRemoveTeacherFromCourse.as_view(), name="new-remove-teacher")
+
 ]

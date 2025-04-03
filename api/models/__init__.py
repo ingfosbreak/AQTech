@@ -10,3 +10,4 @@ from .receipt import Receipt
 from .storage import Storage
 from .timeslot import Timeslot
 from .teacher_assignment import TeacherAssignment
+from .timeslot_assignment import TimeslotTeacherAssignment
