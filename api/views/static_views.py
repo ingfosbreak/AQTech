@@ -117,16 +117,15 @@ class AttendanceLogView(APIView):
 
         # Exclude records with null checked_date
         queryset = Attendance.objects.select_related(
-            "session__course__type", "student"
+            "student", "teacher", "timeslot"
         ).exclude(checked_date__isnull=True)
 
         # Apply search filter
         if search_term:
             queryset = queryset.filter(
                 Q(student__name__icontains=search_term) |
-                Q(session__course__courseName__icontains=search_term) |
-                Q(session__course__type__typeName__icontains=search_term) |
-                Q(checked_date__icontains=search_term)
+                Q(session__course__name__icontains=search_term) |
+                Q(checked_date__icontains=search_term)  # Updated to checked_date, if it still makes sense
             )
 
         # Apply sorting
@@ -138,9 +137,14 @@ class AttendanceLogView(APIView):
                 "id": attendance.id,
                 "name": attendance.student.name,
                 "studentId": attendance.student.id,
-                "course": attendance.session.course.courseName,
-                "courseType": attendance.session.course.type.typeName,
-                "timestamp": localtime(attendance.checked_date).strftime("%Y-%m-%d %H:%M:%S"),  # Safe, since checked_date is never None
+                "course": attendance.session.course.name,
+                "category": attendance.session.course.category.categoryName,  # Added categoryName
+                "attendanceDate": attendance.attendance_date.strftime("%Y-%m-%d"),  # Directly use attendance_date
+                "startTime": attendance.start_time.strftime("%H:%M:%S") if attendance.start_time else None,  # No localtime for TimeField
+                "endTime": attendance.end_time.strftime("%H:%M:%S") if attendance.end_time else None,  # No localtime for TimeField
+                "teacherName": attendance.teacher.name,
+                "timeslot": attendance.timeslot.id,  # Assuming the timeslot can be identified by ID or another field
+                "timestamp": localtime(attendance.checked_date).strftime("%Y-%m-%d %H:%M:%S"),
             }
             for attendance in queryset
         ]

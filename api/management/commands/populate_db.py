@@ -300,6 +300,9 @@ def random_time():
 def create_attendance(sessions, teachers, students, timeslots):
     attendance_objs = []
 
+    timeslots = Timeslot.objects.all()
+    print(f"Debug: Found {timeslots.count()} timeslots")
+
     # Ensure timeslots is not empty
     if not timeslots:
         print("⚠️ Warning: No timeslots available. Skipping attendance creation.")
