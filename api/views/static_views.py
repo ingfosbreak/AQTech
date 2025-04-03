@@ -16,7 +16,9 @@ from django.db.models.functions import ExtractHour, ExtractWeekDay, Extract
 from django.db.models.functions import TruncMonth
 from django.utils.timezone import make_naive
 from django.utils.timezone import localtime
+from django.core.exceptions import ObjectDoesNotExist
 
+from api.models.category import Category
 from api.models.course import Course
 
 class CombinedCountView(APIView):
@@ -24,12 +26,12 @@ class CombinedCountView(APIView):
         # Total number of students
         total_student = Student.objects.count()
 
-        # Active students (students with at least one ongoing session)
+        # Active students (students who have at least one course session)
         active_student = Student.objects.filter(
-            sessions__course__sessions__end_time__gte=now()
+            sessions__isnull=False  # Check if the student has any related CourseSession
         ).distinct().count()
 
-        # Inactive students (students who have no ongoing sessions)
+        # Inactive students (students who have no course session)
         inactive_student = total_student - active_student
 
         # New students (students created in the last 30 days)
@@ -45,25 +47,40 @@ class CombinedCountView(APIView):
             },
             status=status.HTTP_200_OK
         )
-
+    
 class PieChartStaticView(APIView):
     def get(self, request):
-        courseType = request.GET.get('courseType', 'All')  # Default to 'All' if no courseType is specified
-        
-        if courseType != 'All':
-            # Assuming Type model has a field named 'typeName'
-            student_count = Student.objects.filter(sessions__course__type__typeName=courseType).distinct().count()
-            teacher_count = Teacher.objects.filter(sessions__course__type__typeName=courseType).distinct().count()
-        else:
+        # Get the category parameter from the GET request, default to 'All' if not provided
+        category_name = request.GET.get('category', 'All')
+
+        # Handle 'All' case, no filtering
+        if category_name == 'All':
             student_count = Student.objects.count()
             teacher_count = Teacher.objects.count()
+        else:
+            try:
+                # Try to get the category object by categoryName
+                category = Category.objects.get(categoryName=category_name)
 
+                # Filter students based on the course's category
+                student_count = Student.objects.filter(sessions__course__category=category).distinct().count()
+
+                # Filter teachers based on their category
+                teacher_count = Teacher.objects.filter(category=category).count()
+
+            except Category.DoesNotExist:
+                # If the category does not exist, return an error response
+                return Response({"error": "Category not found"}, status=400)
+
+        # Prepare the response data
         data = [
             {"name": "Student", "value": student_count},
             {"name": "Teacher", "value": teacher_count}
         ]
 
-        return Response(data, status=status.HTTP_200_OK)
+        # Return the data as a JSON response
+        return Response(data)
+
     
 class AttendanceHeatmapView(APIView):
     def get(self, request):

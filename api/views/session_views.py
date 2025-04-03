@@ -135,20 +135,20 @@ class SessionProgressDetailView(APIView):
 
         return Response(session_data, status=status.HTTP_200_OK)
     
-class CourseTypeEnrollmentView(APIView):
+class CourseCategoryEnrollmentView(APIView):
     def get(self, request):
-        # Query to get enrollments per course type
+        # Query to get enrollments per category
         course_enrollments = (
             CourseSession.objects
-            .values('course__type__typeName')
-            .annotate(enrollments=Count('student'))
-            .order_by('-enrollments')
+            .values('course__category__categoryName')  # Reference to Category's categoryName via ForeignKey
+            .annotate(enrollments=Count('student'))  # Count the number of students per course
+            .order_by('-enrollments')  # Order by enrollments
         )
 
         # Format data for frontend
         data = [
             {
-                'category': enrollment['course__type__typeName'],
+                'category': enrollment['course__category__categoryName'],  # 'category' maps to categoryName
                 'enrollments': enrollment['enrollments'],
             }
             for enrollment in course_enrollments
