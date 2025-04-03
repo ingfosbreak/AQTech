@@ -84,15 +84,28 @@ class PieChartStaticView(APIView):
     
 class AttendanceHeatmapView(APIView):
     def get(self, request):
-        # Get course type filter from query parameters
-        course_type = request.GET.get("courseType", "All")
+        # Get course category filter from query parameters
+        category_name = request.GET.get("category", "All")
+        print(f"Filtering with courseCategory: {category_name}")
+
+        # Get the current date and time
+        now = timezone.now()
+
+        # Calculate the start of the range (7 days ago from now)
+        start_of_range = now - timedelta(days=7)  # 7 days ago from now
+
+        print(f"Start of range (7 days ago): {start_of_range}")
+        print(f"End of range (current time): {now}")
 
         # Create base queryset with related data, excluding null checked_date
-        queryset = Attendance.objects.select_related("session__course__type").exclude(checked_date__isnull=True)
+        queryset = Attendance.objects.select_related("session__course__category").exclude(checked_date__isnull=True)
 
-        # Apply course type filter if needed
-        if course_type != "All":
-            queryset = queryset.filter(Q(session__course__type__typeName=course_type))
+        # Apply course category filter if needed
+        if category_name != "All":
+            queryset = queryset.filter(Q(session__course__category__categoryName=category_name))
+
+        # Filter by the past 7 days (from 7 days ago to now)
+        queryset = queryset.filter(checked_date__gte=start_of_range, checked_date__lte=now)
 
         # Extract hour and weekday with local time conversion
         heatmap_data = []
