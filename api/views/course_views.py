@@ -230,3 +230,59 @@ class NewRemoveTeacherFromCourse(APIView):
 
         except Course.DoesNotExist:
             return Response({"error": "Course not found"}, status=status.HTTP_404_NOT_FOUND)
+
+class NewCreateCourseAPIView(APIView):
+    """API to create a new course"""
+
+    def post(self, request):
+        try:
+            data = request.data
+
+            # Validate required fields
+            required_fields = ["name", "description", "type", "quota", "price", "category_id"]
+            for field in required_fields:
+                if field not in data:
+                    return Response({"error": f"{field} is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Validate course type
+            if data["type"] not in ["restricted", "unrestricted"]:
+                return Response({"error": "Invalid course type"}, status=status.HTTP_400_BAD_REQUEST)
+
+            # If type is 'restricted', min_age and max_age are required
+            if data["type"] == "restricted":
+                if "min_age" not in data or "max_age" not in data:
+                    return Response({"error": "min_age and max_age are required for restricted courses"}, status=status.HTTP_400_BAD_REQUEST)
+
+                if data["min_age"] is None or data["max_age"] is None:
+                    return Response({"error": "min_age and max_age cannot be null for restricted courses"}, status=status.HTTP_400_BAD_REQUEST)
+
+                if data["min_age"] > data["max_age"]:
+                    return Response({"error": "min_age cannot be greater than max_age"}, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                # If type is 'unrestricted', min_age and max_age should be set to None
+                data["min_age"] = None
+                data["max_age"] = None
+
+            # Validate category exists
+            try:
+                category = Category.objects.get(id=data["category_id"])
+            except Category.DoesNotExist:
+                return Response({"error": "Category not found"}, status=status.HTTP_404_NOT_FOUND)
+
+            # Create course
+            course = Course.objects.create(
+                name=data["name"],
+                description=data["description"],
+                type=data["type"],
+                min_age=data["min_age"],
+                max_age=data["max_age"],
+                quota=data["quota"],
+                price=data["price"],
+                category=category,
+                created_at=timezone.now()
+            )
+
+            return Response({"message": "Course created successfully", "course_id": course.id}, status=status.HTTP_201_CREATED)
+
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
