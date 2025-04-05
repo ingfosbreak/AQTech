@@ -2,7 +2,7 @@ from django.urls import path
 # from .views import Home
 # from api.views.storage_views import StorageListView, StorageDetailView
 from api.views import StorageListView, StorageDetailView, StaffUserView, UserUpdateView, UserDetailView, UserListView, StudentCreateView, StudentListView, TeacherCreateView, TeacherListView, SessionView, UserInfoView, VerifyTokenView, CombinedCountView, PieChartStaticView
-from api.views.category_view import CategoryListView
+from api.views.category_view import CategoryCreateView, CategoryListView
 from api.views.course_views import CourseCreateView, CourseEnrolledView, CourseListView, CourseDetailView, CoursePriceListView, StudentCourseListView, NewUnitCourseDetailView, NewGetAddTeacherList, NewAddTeacherToCourse, NewRemoveTeacherFromCourse, NewCreateCourseAPIView
 from api.views.session_views import CourseCategoryEnrollmentView, SessionProgressDetailView, SessionProgressView
 from api.views.static_views import AttendanceHeatmapView, AttendanceLogView, CoursePerformanceView, RecentAttendanceView
@@ -69,6 +69,7 @@ urlpatterns = [
     path("attendacne-but-modify/", AttendanceListModifyView.as_view(), name="attendance-buy-modify"),
     path('course-enrollment/', CourseCategoryEnrollmentView.as_view(), name='api_course_sessions_grouped_by_type'),
     path('categories/', CategoryListView.as_view(), name='category-list'),
+    path('categories/create/', CategoryCreateView.as_view(), name='category-create'),  # POST to create a category
 
 
     ## new api ink and kevin
