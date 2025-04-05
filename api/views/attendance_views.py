@@ -25,7 +25,7 @@ class AttendanceView(APIView):
         
         try:
             session = CourseSession.objects.get(id=session_id)
-        except (CourseSession.DoesNotExist):
+        except CourseSession.DoesNotExist:
             return JsonResponse({"error": "session not found."}, status=status.HTTP_404_NOT_FOUND)
         
         try:
@@ -46,8 +46,9 @@ class AttendanceView(APIView):
             return JsonResponse({"error": "The date must be today or in the future."}, status=status.HTTP_400_BAD_REQUEST)
         
         if date_obj == today:
-            if start_datetime <= now:
-                return JsonResponse({"error": "The start time must be in the future."}, status=status.HTTP_400_BAD_REQUEST)
+            # Check if current time is before or up to the start time of the session
+            if now > start_datetime:
+                return JsonResponse({"error": "The start time has passed, attendance can no longer be marked."}, status=status.HTTP_400_BAD_REQUEST)
 
         existing_attendance = Attendance.objects.filter(
             session=session,
@@ -71,12 +72,11 @@ class AttendanceView(APIView):
             )
 
         except Exception as e:
-        # Log the exception and return an error
+            # Log the exception and return an error
             print(f"Error creating attendance: {e}")  # Log error to console
-            return JsonResponse({"error": e}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return JsonResponse({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         return JsonResponse(model_to_dict(attendance), safe=False, status=status.HTTP_200_OK)
-
 
 class AttendanceModifyView(APIView):
 
