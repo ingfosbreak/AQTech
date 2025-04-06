@@ -286,3 +286,38 @@ class NewCreateCourseAPIView(APIView):
 
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class NewUnitCourseListView(APIView):
+    """Admin API to get list of all courses including assigned teachers."""
+
+    def get(self, request):
+        courses = Course.objects.all().select_related("category").prefetch_related("assigns__teacher__user")
+        response_data = []
+
+        for course in courses:
+            assignments = TeacherAssignment.objects.filter(course=course)
+            teachers = [
+                {
+                    "id": assignment.teacher.id,
+                    "name": assignment.teacher.name,
+                    "contact": assignment.teacher.user.contact,
+                    "status": assignment.teacher.status
+                }
+                for assignment in assignments
+            ]
+
+            response_data.append({
+                "id": course.id,
+                "name": course.name,
+                "description": course.description,
+                "type": course.type,
+                "min_age": course.min_age,
+                "max_age": course.max_age,
+                "quota": course.quota,
+                "created_at": course.created_at.isoformat(),
+                "price": course.price,
+                "category": course.category.categoryName,
+                "teachers": teachers,
+            })
+
+        return Response(response_data, status=status.HTTP_200_OK)
