@@ -3,7 +3,7 @@ from django.urls import path
 # from api.views.storage_views import StorageListView, StorageDetailView
 from api.views import StorageListView, StorageDetailView, StaffUserView, UserUpdateView, UserDetailView, UserListView, StudentCreateView, StudentListView, TeacherCreateView, TeacherListView, SessionView, UserInfoView, VerifyTokenView, CombinedCountView, PieChartStaticView
 from api.views.category_view import CategoryListView
-from api.views.course_views import CourseCreateView, CourseEnrolledView, CourseListView, CourseDetailView, CoursePriceListView, StudentCourseListView, NewUnitCourseDetailView, NewGetAddTeacherList, NewAddTeacherToCourse, NewRemoveTeacherFromCourse, NewCreateCourseAPIView, NewUnitCourseListView
+from api.views.course_views import CourseCreateView, CourseEnrolledView, CourseListView, CourseDetailView, CoursePriceListView, StudentCourseListView, NewUnitCourseDetailView, NewGetAddTeacherList, NewAddTeacherToCourse, NewRemoveTeacherFromCourse, NewCreateCourseAPIView, NewUnitCourseListView, NewStudentUsernameListView
 from api.views.session_views import CourseCategoryEnrollmentView, SessionProgressDetailView, SessionProgressView
 from api.views.static_views import AttendanceHeatmapView, AttendanceLogView, CoursePerformanceView, RecentAttendanceView
 from api.views.student_views import AddStudentView, StudentStatusUpdateView, UserStudentListView
@@ -81,7 +81,7 @@ urlpatterns = [
     path('new/courses/<int:course_id>/assign-teacher/', NewAddTeacherToCourse.as_view(), name="new-add-teacher"),
     path('new/courses/<int:course_id>/<int:teacher_id>/remove-teacher/', NewRemoveTeacherFromCourse.as_view(), name="new-remove-teacher"),
     path('new/courses/create/', NewCreateCourseAPIView.as_view(), name="new-create-course"),
-    path('new/courses/enroll-list/', NewUnitCourseListView.as_view(), name="new-courses-list")
-
+    path('new/courses/enroll-list/', NewUnitCourseListView.as_view(), name="new-courses-list"),
+    path('new/courses/student-enroll/', NewStudentUsernameListView.as_view(), name="new-students-list"),
 
 ]

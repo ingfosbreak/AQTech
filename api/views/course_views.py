@@ -12,6 +12,7 @@ from api.serializers.session_serializers import CourseSessionSerializer
 from rest_framework.permissions import IsAuthenticated
 from django.utils import timezone
 from django.db import transaction
+from django.http import JsonResponse
 
 class CourseListView(ListAPIView):
     queryset = Course.objects.all()
@@ -321,3 +322,25 @@ class NewUnitCourseListView(APIView):
             })
 
         return Response(response_data, status=status.HTTP_200_OK)
+
+class NewStudentUsernameListView(APIView):
+    # authentication_classes = [JWTAuthentication]
+    # permission_classes = [IsAdmin]
+
+    def get(self, request):
+        students = Student.objects.all()
+
+        # Map the student objects to a list of dictionaries, including the username
+        student_list = [
+            {
+                'id': student.id,
+                'name': student.name,
+                'birthdate': student.birthdate,
+                'username': student.user.username,
+                "avatar": "/placeholder.svg?height=64&width=64",
+            }
+            for student in students
+        ]
+
+        # Return the list of students with their usernames as a JSON response
+        return JsonResponse(student_list, safe=False, status=status.HTTP_200_OK)
