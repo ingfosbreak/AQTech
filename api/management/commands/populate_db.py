@@ -21,37 +21,60 @@ User = get_user_model()  # Use custom User model if applicable
 
 # ------------------------- Create Users -------------------------
 def create_users():
+    # Sample real names for teachers and users (you can add more names or get from an external source)
+    teacher_names = [
+        "John Smith", "Jane Doe", "James Brown", "Emily Davis", "Michael Wilson",
+        "Sarah Lee", "David Harris", "Sophia Clark", "Daniel Lewis", "Megan Walker"
+    ]
+    user_names = [
+        "Alice Johnson", "Bob Martin", "Charlie Evans", "Diana Walker", "Ethan Moore",
+        "Grace Scott", "Hannah Baker", "Ian Adams", "Jack Taylor", "Kylie Carter"
+    ]
+    
+    # Initialize users data
     users = [
-        {"username": "staff", "password": "admin123", "email": "staff@example.com", "role": "staff", "join_date": timezone.now()},
-        {"username": "teacher1", "password": "pass123", "email": "teacher1@example.com", "role": "teacher", "join_date": timezone.now() - timedelta(days=100), "contact": "1234567890"},
-        {"username": "teacher2", "password": "pass123", "email": "teacher2@example.com", "role": "teacher", "join_date": timezone.now() - timedelta(days=90), "contact": "0987654321"},
-        {"username": "parent1", "password": "pass123", "email": "parent1@example.com", "role": "user", "join_date": timezone.now() - timedelta(days=90), "contact": "1122334455"},
+        {"username": "staff", "password": "admin123", "email": "staff@example.com", "role": "staff", "join_date": timezone.now(), "first_name": "Staff", "last_name": "Member"},
     ]
 
-    # Adding 8 more teachers
+    # Adding 8 teachers with real names
     for i in range(3, 11):  # Start from teacher3 to teacher10
+        teacher_name = random.choice(teacher_names)  # Randomly pick a teacher's name
+        teacher_names.remove(teacher_name)  # Remove the name to ensure no duplicates
+        first_name, last_name = teacher_name.split()  # Split the name into first and last name
         users.append({
             "username": f"teacher{i}",
             "password": "pass123",
             "email": f"teacher{i}@example.com",
             "role": "teacher",
             "join_date": timezone.now() - timedelta(days=100 - i * 10),  # Stagger the join dates for variety
-            "contact": f"555123456{i}",  # Example phone number format
+            "contact": f"555123456{i}",
+            "first_name": first_name,
+            "last_name": last_name,  # Assign first and last names
         })
 
-    # Generate 10 "user" role accounts
+    # Generate 10 "user" role accounts with real names
     for i in range(1, 11):
+        user_name = random.choice(user_names)  # Randomly pick a user name
+        user_names.remove(user_name)  # Remove the name to ensure no duplicates
+        first_name, last_name = user_name.split()  # Split the name into first and last name
         users.append({
             "username": f"user{i}",
             "password": "userpass123",
             "email": f"user{i}@example.com",
             "role": "user",
             "join_date": timezone.now() - timedelta(days=i * 10),
-            "contact": f"555123456{i}",  # Example phone number format
+            "contact": f"555123456{i}",
+            "first_name": first_name,
+            "last_name": last_name,  # Assign first and last names
         })
 
     user_objs = []
     for user in users:
+        # Ensure that first_name and last_name are present
+        first_name = user.get("first_name", "")
+        last_name = user.get("last_name", "")
+        
+        # Update or create the user object
         obj, created = User.objects.update_or_create(
             username=user["username"],
             defaults={
@@ -59,6 +82,8 @@ def create_users():
                 "role": user["role"],
                 "join_date": user["join_date"],
                 "contact": user.get("contact", ""),  # Default to an empty string if no contact is provided
+                "first_name": first_name,  # Assign first_name
+                "last_name": last_name,  # Assign last_name
             }
         )
         obj.set_password(user["password"])
@@ -211,29 +236,29 @@ def create_students(users):
     return students
 
 # ------------------------- Create Session -------------------------
-def create_sessions(courses, teachers, students):
-    if not teachers:
-        print("⚠️ No teachers available! Skipping session creation.")
-        return []
+def create_sessions(courses, students):
 
     sessions = []
+    course_count = len(courses)
 
-    for student in students:
-        num_sessions = random.randint(1, 3)  # Each student gets 1 to 3 sessions
-        for i in range(num_sessions):
-            # Generate a name for the session
-            session_name = f"{student.name}'s {random.choice(courses).name} Session {i+1}"
+    # Loop through every student in the database and assign them to a course
+    for index, student in enumerate(students):
+        # Assign each student a course session in a round-robin manner
+        course = courses[index % course_count]  # This ensures courses loop back once we run out
 
-            # Create the session
-            session = CourseSession.objects.create(
-                course=random.choice(courses),  # Random course
-                student=student,  # The current student
-                name=session_name,  # The generated session name
-                total_quota=1,  # Example quota (can be adjusted as needed)
-            )
-            sessions.append(session)
+        # Generate the session name
+        session_name = f"{student.name}'s {course.name} Session"
 
-    print(f"✅ Created {len(sessions)} unique course sessions.")
+        # Create the session for the student
+        session = CourseSession.objects.create(
+            course=course,  # The selected course for the student
+            student=student,  # The current student
+            name=session_name,  # The generated session name
+            total_quota=10,  # Example quota (can be adjusted as needed)
+        )
+        sessions.append(session)
+
+    print(f"✅ Created {len(sessions)} course sessions for students.")
     return sessions
 
 
@@ -315,7 +340,8 @@ def create_attendance(sessions, teachers, students, timeslots):
         print("⚠️ Warning: No valid Timeslot instances found in the database.")
         return attendance_objs
 
-    for _ in range(20):  # Create at least 20 attendance records
+    # Increase number of records to create (e.g., 50 records)
+    for _ in range(50):  # Create at least 50 attendance records
         session = random.choice(sessions)
         teacher = random.choice(teachers)
         student = random.choice(students)
@@ -323,14 +349,29 @@ def create_attendance(sessions, teachers, students, timeslots):
         # Select a valid timeslot from the database
         timeslot = random.choice(valid_timeslots)
 
-        # Randomly assign checked_date to a time between 10 AM and 5 PM
-        checked_time_str = random_time()
-        checked_date = timezone.now().replace(
-            hour=int(checked_time_str.split(":")[0]),
-            minute=int(checked_time_str.split(":")[1]),
-            second=0,
-            microsecond=0
-        )
+        # Randomize the checked_time within today (not further off than the current time)
+        checked_date = timezone.now()
+
+        # Randomize time between 10:00 AM and current time (not in the future)
+        hour = random.randint(10, checked_date.hour)  # Random hour between 10 AM and the current hour
+        minute = random.randint(0, 59)  # Random minute within that hour
+        checked_date = checked_date.replace(hour=hour, minute=minute, second=0, microsecond=0)
+
+        if checked_date > timezone.now():  # Ensure the time is not in the future
+            checked_date = timezone.now()
+
+        # Randomize start_time and end_time within today's range
+        start_hour = random.randint(10, checked_date.hour)  # Random start time between 10 AM and the current hour
+        start_minute = random.randint(0, 59)
+        start_time = checked_date.replace(hour=start_hour, minute=start_minute)
+
+        # Ensure end_time is later than start_time, randomize duration between 30 minutes and 2 hours
+        duration = random.randint(30, 120)  # Duration in minutes
+        end_time = start_time + timedelta(minutes=duration)
+
+        # Ensure end_time is not beyond the current time
+        if end_time > timezone.now():
+            end_time = timezone.now()
 
         # Create Attendance record
         attendance = Attendance.objects.create(
@@ -340,8 +381,8 @@ def create_attendance(sessions, teachers, students, timeslots):
             timeslot=timeslot,  # Pass the Timeslot instance
             status=random.choice(["present", "absent"]),  # Randomize attendance status
             attendance_date=timezone.now().date(),
-            start_time="11:00",  # Default start_time
-            end_time="12:00",    # Default end_time
+            start_time=start_time.strftime("%H:%M"),  # Format start_time as HH:MM
+            end_time=end_time.strftime("%H:%M"),      # Format end_time as HH:MM
             checked_date=checked_date,
         )
 
@@ -440,7 +481,7 @@ def populate_database():
     courses = create_categories_and_courses()
     teachers = create_teachers(users)
     students = create_students(users)  # ✅ Create students first
-    sessions = create_sessions(courses, teachers, students)  # ✅ Create unique sessions per student
+    sessions = create_sessions(courses, students)  # ✅ Create unique sessions per student
     assign_students_to_sessions(students, sessions)
     timeslots = create_timeslot(courses)
     create_teacher_assignments()

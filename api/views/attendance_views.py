@@ -99,7 +99,7 @@ class AttendanceModifyView(APIView):
                 
                 for session in student.sessions_list:
                     session_data = model_to_dict(session)
-                    session_data['session_name'] = session.course.courseName
+                    session_data['session_name'] = session.course.name
                     session_data['attendances'] = []
 
                     # Map attendance to each session
@@ -187,7 +187,7 @@ class AttendanceListView(APIView):
                         "session_id": att.session.id,
                         "session_date": att.session.session_date,
                         "course_id": att.session.course.id,
-                        "course_name": att.session.course.courseName,
+                        "course_name": att.session.course.name,
                         "teacher_id": att.teacher.id,
                         "teacher_name": f"{att.teacher.name}",
                         "student_id": att.student.id,
@@ -237,7 +237,7 @@ class AttendanceListModifyView(APIView):
                         "session_id": att.session.id,
                         "session_date": att.session.session_date,
                         "course_id": att.session.course.id,
-                        "course_name": att.session.course.courseName,
+                        "course_name": att.session.course.name,
                         "teacher_id": att.teacher.id,
                         "teacher_name": f"{att.teacher.name}",
                         "student_id": att.student.id,
