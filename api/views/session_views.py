@@ -76,14 +76,23 @@ class SessionProgressView(APIView):
             total_classes = session.total_quota  # Uses related_name
             attended_classes = session.attendances.filter(status="present").count()
 
+            # Retrieve the first associated timeslot date (assuming there's at least one timeslot per session)
+            timeslot = session.course.timeslots.first()  # Assuming there is one timeslot per session for simplicity
+            if timeslot:
+                start_date = timeslot.timeslot_date
+                end_date = start_date + timedelta(weeks=10)
+            else:
+                start_date = None
+                end_date = None
+
             session_data.append({
                 "id": session.id,
-                "title": session.course.courseName,
+                "title": session.course.name,
                 "description": session.course.description,
                 "totalClasses": total_classes,
                 "attendedClasses": attended_classes,
-                "startDate": session.session_date,
-                "endDate": session.session_date + timedelta(weeks=10),
+                "startDate": start_date,
+                "endDate": end_date,
             })
 
         return Response(session_data, status=status.HTTP_200_OK)
@@ -96,41 +105,53 @@ class SessionProgressDetailView(APIView):
         if not request.user.is_authenticated:
             return Response({"error": "Authentication credentials were not provided."}, status=status.HTTP_401_UNAUTHORIZED)
 
+        # Get parameters from request
         student_id = request.GET.get("studentId")
         session_id = request.GET.get("sessionId")
 
         if not student_id or not session_id:
             return Response({"error": "studentId and sessionId are required"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Ensure the student exists and belongs to the logged-in user
+        # Validate student and session
         student = get_object_or_404(Student, id=student_id, user=request.user)
-
-        # Get the specific session
         session = get_object_or_404(CourseSession, id=session_id, student=student)
 
-        # Fetch all attendance records for this session and student
-        attendance_records = Attendance.objects.filter(session=session, student=student).order_by("attendance_date")
+        # Get related course and timeslots
+        course = session.course
+        timeslots = course.timeslots.all()
 
-        # Format attendance data
-        attendance_data = [
-            {
-                "attendanceDate": record.attendance_date,
+        # Fetch attendance records for these timeslots and student
+        attendance_records = Attendance.objects.select_related(
+            "student", "timeslot"
+        ).filter(
+            timeslot__in=timeslots,
+            student=student
+        ).order_by("attendance_date")
+
+        # Calculate dates based on actual timeslots
+        start_date = timeslots.first().timeslot_date if timeslots.exists() else None
+        end_date = timeslots.last().timeslot_date if timeslots.exists() else None
+
+        # Prepare attendance data
+        attendance_data = []
+        for record in attendance_records:
+            attendance_data.append({
+                "attendanceDate": record.attendance_date.strftime("%Y-%m-%d"),
                 "status": record.status,
                 "checkedDate": record.checked_date,
-            }
-            for record in attendance_records
-        ]
+                "timeslotDate": record.timeslot.timeslot_date
+            })
 
-        # Prepare session details
+        # Build response
         session_data = {
             "id": session.id,
-            "title": session.course.courseName,
-            "description": session.course.description,
-            "totalClasses": session.total_quota,
-            "attendedClasses": session.attendances.filter(student=student, status="present").count(),
-            "startDate": session.session_date,
-            "endDate": session.session_date + timedelta(weeks=10),
-            "attendanceRecords": attendance_data,  # ✅ List of all attendance records
+            "title": course.name,
+            "description": course.description,
+            "totalClasses": timeslots.count(),  # Using actual timeslot count
+            "attendedClasses": attendance_records.filter(status="present").count(),
+            "startDate": start_date,
+            "endDate": end_date,
+            "attendanceRecords": attendance_data,
         }
 
         return Response(session_data, status=status.HTTP_200_OK)
