@@ -74,7 +74,8 @@ class SessionProgressView(APIView):
         session_data = []
         for session in sessions:
             total_classes = session.total_quota  # Uses related_name
-            attended_classes = session.attendances.filter(status="present").count()
+            # Filter the attendances for the given student and count the 'present' ones
+            attended_classes = session.attendances.filter(student=student, status="present").count()
 
             # Retrieve the first associated timeslot date (assuming there's at least one timeslot per session)
             timeslot = session.course.timeslots.first()  # Assuming there is one timeslot per session for simplicity
@@ -87,7 +88,7 @@ class SessionProgressView(APIView):
 
             session_data.append({
                 "id": session.id,
-                "title": session.course.name,
+                "title": session.name,
                 "description": session.course.description,
                 "totalClasses": total_classes,
                 "attendedClasses": attended_classes,
@@ -114,23 +115,28 @@ class SessionProgressDetailView(APIView):
 
         # Validate student and session
         student = get_object_or_404(Student, id=student_id, user=request.user)
+        
+        # Ensuring the student is part of the specific course session
         session = get_object_or_404(CourseSession, id=session_id, student=student)
 
         # Get related course and timeslots
         course = session.course
         timeslots = course.timeslots.all()
 
-        # Fetch attendance records for these timeslots and student
+        # Fetch attendance records for this student and session
         attendance_records = Attendance.objects.select_related(
-            "student", "timeslot"
+            "student", "timeslot", "session"
         ).filter(
-            timeslot__in=timeslots,
+            session=session,
             student=student
         ).order_by("attendance_date")
 
         # Calculate dates based on actual timeslots
         start_date = timeslots.first().timeslot_date if timeslots.exists() else None
         end_date = timeslots.last().timeslot_date if timeslots.exists() else None
+
+        # Count attended classes
+        attended_classes = attendance_records.filter(status="present").count()
 
         # Prepare attendance data
         attendance_data = []
@@ -145,10 +151,11 @@ class SessionProgressDetailView(APIView):
         # Build response
         session_data = {
             "id": session.id,
-            "title": course.name,
-            "description": course.description,
+            "name": session.name,  # Using session name as provided in the model
+            "courseTitle": course.name,
+            "courseDescription": course.description,
             "totalClasses": timeslots.count(),  # Using actual timeslot count
-            "attendedClasses": attendance_records.filter(status="present").count(),
+            "attendedClasses": attended_classes,
             "startDate": start_date,
             "endDate": end_date,
             "attendanceRecords": attendance_data,
