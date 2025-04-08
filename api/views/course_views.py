@@ -7,7 +7,7 @@ from api.serializers.course_serializers import CourseDetailedSerializer, CourseS
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
-from api.models import Course, TeacherAssignment, Teacher, Timeslot, TimeslotTeacherAssignment
+from api.models import Course, TeacherAssignment, Teacher, Timeslot, TimeslotTeacherAssignment, Attendance
 from api.serializers.session_serializers import CourseSessionSerializer
 from rest_framework.permissions import IsAuthenticated
 from django.utils import timezone
@@ -344,3 +344,119 @@ class NewStudentUsernameListView(APIView):
 
         # Return the list of students with their usernames as a JSON response
         return JsonResponse(student_list, safe=False, status=status.HTTP_200_OK)
+
+class TimeSlotSelectionView(APIView):
+    """
+    API that returns:
+    1. course_timeslots: Available timeslots for the given course
+    2. other_category_timeslots: Timeslots from other courses in the same category (for reference)
+    3. student_attendances: All future attendances of the given students
+    """
+
+    def post(self, request):
+        course_id = request.data.get("courseId")
+        student_ids = request.data.get("studentIds", [])
+
+        if not course_id or not student_ids:
+            return Response({"error": "courseId and studentIds are required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            course = Course.objects.get(id=course_id)
+        except Course.DoesNotExist:
+            return Response({"error": "Course not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        today = timezone.localdate()
+
+        # 1. Determine quota per category
+        def get_quota_for_category(category_name):
+            if category_name.lower() == "playsound":
+                return 2
+            return 6  # both aquakids and other
+
+        course_category = course.category.categoryName
+        category_quota = get_quota_for_category(course_category)
+
+        # 2. Timeslots of current course (from today onwards)
+        course_timeslots = Timeslot.objects.filter(course=course, timeslot_date__gte=today)
+
+        course_timeslot_data = []
+        for ts in course_timeslots:
+            current_attendance = Attendance.objects.filter(timeslot=ts).count()
+            available_quota = category_quota - current_attendance
+            course_timeslot_data.append({
+                "id": ts.id,
+                "date": ts.timeslot_date.isoformat(),
+                "startTime": ts.start_time.strftime("%H:%M") if ts.start_time else None,
+                "endTime": ts.end_time.strftime("%H:%M") if ts.end_time else None,
+                "hour": ts.start_time.hour if ts.start_time else None,
+                "availableQuota": available_quota,
+                "courseId": str(course.id),
+                "courseName": course.name,
+                "isVisible": True,
+            })
+
+        # 3. Timeslots of other courses in same category
+        other_courses = Course.objects.filter(category=course.category).exclude(id=course.id)
+        other_timeslots = Timeslot.objects.filter(course__in=other_courses, timeslot_date__gte=today)
+
+        other_timeslot_data = []
+        for ts in other_timeslots:
+            other_course = ts.course
+            other_quota = get_quota_for_category(other_course.category.categoryName)
+            current_attendance = Attendance.objects.filter(timeslot=ts).count()
+            available_quota = other_quota - current_attendance
+            other_timeslot_data.append({
+                "id": ts.id,
+                "date": ts.timeslot_date.isoformat(),
+                "startTime": ts.start_time.strftime("%H:%M") if ts.start_time else None,
+                "endTime": ts.end_time.strftime("%H:%M") if ts.end_time else None,
+                "hour": ts.start_time.hour if ts.start_time else None,
+                "availableQuota": available_quota,
+                "courseId": str(other_course.id),
+                "courseName": other_course.name,
+                "isVisible": True,  # Always true since same category
+            })
+
+        # 4. Student attendance records (future only)
+        student_attendance_data = []
+        for sid in student_ids:
+            try:
+                student = Student.objects.get(id=sid)
+            except Student.DoesNotExist:
+                continue
+
+            attendances = Attendance.objects.filter(
+                student=student,
+                attendance_date__gte=today
+            ).select_related("timeslot", "timeslot__course")
+
+            timeslots = []
+            for att in attendances:
+                ts = att.timeslot
+                related_course = ts.course
+                related_quota = get_quota_for_category(related_course.category.categoryName)
+                current_attendance = Attendance.objects.filter(timeslot=ts).count()
+                available_quota = related_quota - current_attendance
+
+                timeslots.append({
+                    "id": ts.id,
+                    "date": ts.timeslot_date.isoformat(),
+                    "startTime": ts.start_time.strftime("%H:%M") if ts.start_time else None,
+                    "endTime": ts.end_time.strftime("%H:%M") if ts.end_time else None,
+                    "hour": ts.start_time.hour if ts.start_time else None,
+                    "availableQuota": available_quota,
+                    "courseId": str(related_course.id),
+                    "courseName": related_course.name,
+                    "isVisible": related_course.category == course.category,
+                })
+
+            student_attendance_data.append({
+                "studentId": sid,
+                "timeslots": timeslots
+            })
+
+        return Response({
+            "course_timeslots": course_timeslot_data,
+            "other_category_timeslots": other_timeslot_data,
+            "student_attendances": student_attendance_data,
+        }, status=status.HTTP_200_OK)
