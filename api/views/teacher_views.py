@@ -3,6 +3,9 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_simplejwt.authentication import JWTAuthentication
+from api.models.attendance import Attendance
+from api.models.course import Course
+from api.models.session import CourseSession
 from api.permissions import IsAdmin
 from api.models import User, Teacher, Category, TeacherAssignment
 from django.contrib.auth.hashers import make_password
@@ -328,3 +331,75 @@ class TeacherProfileView(APIView):
         }
 
         return Response(data)
+    
+class ClassSessionView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]  # Ensure user is authenticated
+
+    def get(self, request, class_id):
+        # Ensure the user is a teacher
+        user = request.user
+
+        if user.role != 'teacher':
+            return Response(
+                {"error": "Forbidden: User is not a teacher"},
+                status=403
+            )
+
+        # Get the course by ID (class_id)
+        try:
+            course = Course.objects.get(id=class_id)
+        except Course.DoesNotExist:
+            return Response(
+                {"error": "Course not found"},
+                status=404
+            )
+
+        # Get all sessions related to the course
+        sessions = CourseSession.objects.filter(course=course)
+
+        session_data = []
+        for session in sessions:
+            # Get all attendances for this session
+            attendances = Attendance.objects.filter(session=session)
+
+            attendance_data = []
+            for attendance in attendances:
+                # Check if the attendance's student_id matches the session's student_id
+                # Assuming each CourseSession has a related student (e.g., session.student)
+                if attendance.student.id == session.student.id:  # Match student ID
+                    attendance_data.append({
+                        "id": attendance.id,
+                        "status": attendance.status,
+                        "type": attendance.type,
+                        "student_id": attendance.student.id,
+                        "student_name": attendance.student.name,
+                        "attendance_date": attendance.attendance_date,
+                        "start_time": attendance.start_time,
+                        "end_time": attendance.end_time,
+                    })
+
+            # Only include sessions that have matching attendance records
+            if attendance_data:
+                session_data.append({
+                    "id": session.id,
+                    "name": session.name,
+                    "total_quota": session.total_quota,
+                    "attendances": attendance_data
+                })
+
+        # If no sessions have matching attendance data, return an error message
+        if not session_data:
+            return Response(
+                {"error": "No students enrolled in this class or no sessions available."},
+                status=404
+            )
+
+        # Construct response data for the teacher
+        data = {
+            "course_id": course.id,
+            "course_name": course.name,
+            "sessions": session_data
+        }
+
+        return Response(data, status=status.HTTP_200_OK)

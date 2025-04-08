@@ -8,7 +8,7 @@ from api.views.session_views import CourseCategoryEnrollmentView, SessionProgres
 from api.views.static_views import AttendanceHeatmapView, AttendanceLogView, CoursePerformanceView, RecentAttendanceView
 from api.views.student_views import AddStudentView, StudentStatusUpdateView, UserStudentListView
 from api.views.user_views import ProfileView
-from api.views.teacher_views import CreateUserTeacherView, TeacherAssignmentView, TeacherDetailView, TeacherProfileView, TeacherStatusUpdateView, TeacherUsernameListView, NewCreateTeacherUserView, NewTeacherDetailView
+from api.views.teacher_views import ClassSessionView, CreateUserTeacherView, TeacherAssignmentView, TeacherDetailView, TeacherProfileView, TeacherStatusUpdateView, TeacherUsernameListView, NewCreateTeacherUserView, NewTeacherDetailView
 from api.views.student_views import AddStudentView, StudentDetailView, StudentUsernameListView, StudentCertificateListView
 from api.views import CreatePaymentIntentView, StripeWebhookAPIView
 from api.views.storage_views import StorageChangeImage
@@ -70,6 +70,7 @@ urlpatterns = [
     path('course-enrollment/', CourseCategoryEnrollmentView.as_view(), name='api_course_sessions_grouped_by_type'),
     path('categories/', CategoryListView.as_view(), name='category-list'),
     path('categories/create/', CategoryCreateView.as_view(), name='category-create'),  # POST to create a category
+    path('teacher/class/<int:class_id>/sessions/', ClassSessionView.as_view(), name='class-sessions'),
 
 
     ## new api ink and kevin
