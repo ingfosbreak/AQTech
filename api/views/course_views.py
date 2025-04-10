@@ -3,6 +3,7 @@ from api.models import Course
 from api.models.category import Category
 from api.models.session import CourseSession
 from api.models.student import Student
+from api.models.receipt import Receipt  
 from api.serializers.course_serializers import CourseDetailedSerializer, CourseSerializer, CoursePriceSerializer
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -13,6 +14,8 @@ from rest_framework.permissions import IsAuthenticated
 from django.utils import timezone
 from django.db import transaction
 from django.http import JsonResponse
+from datetime import datetime, time
+from django.utils.timezone import now
 
 class CourseListView(ListAPIView):
     queryset = Course.objects.all()
@@ -392,7 +395,7 @@ class TimeSlotSelectionView(APIView):
                 "availableQuota": available_quota,
                 "courseId": str(course.id),
                 "courseName": course.name,
-                "isVisible": True,
+                "isNewSlot": False,
             })
 
         # 3. Timeslots of other courses in same category
@@ -414,7 +417,7 @@ class TimeSlotSelectionView(APIView):
                 "availableQuota": available_quota,
                 "courseId": str(other_course.id),
                 "courseName": other_course.name,
-                "isVisible": True,  # Always true since same category
+                "isNewSlot": False,  # Always true since same category
             })
 
         # 4. Student attendance records (future only)
@@ -447,7 +450,7 @@ class TimeSlotSelectionView(APIView):
                     "availableQuota": available_quota,
                     "courseId": str(related_course.id),
                     "courseName": related_course.name,
-                    "isVisible": related_course.category == course.category,
+                    "isNewSlot": False,
                 })
 
             student_attendance_data.append({
@@ -460,3 +463,171 @@ class TimeSlotSelectionView(APIView):
             "other_category_timeslots": other_timeslot_data,
             "student_attendances": student_attendance_data,
         }, status=status.HTTP_200_OK)
+    
+class CreateBatchAttendanceAPIView(APIView):
+    def post(self, request):
+        try:
+            data = request.data
+            bookings = data.get("bookings", [])
+            course_id = data.get("course_id")
+
+            if not course_id:
+                return Response({"error": "course_id is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+            course = Course.objects.get(id=course_id)
+
+            # ✅ Get all assigned teachers for this course
+            assigned_teachers = TeacherAssignment.objects.filter(course=course)
+            if not assigned_teachers.exists():
+                return Response({"error": "No teacher assigned to this course"}, status=status.HTTP_400_BAD_REQUEST)
+
+            # ✅ Use the first teacher for attendance record (just to fill required field)
+            default_teacher = assigned_teachers.first().teacher
+
+            today = timezone.localdate()
+            created_attendance_ids = []
+
+            with transaction.atomic():
+
+                # ✅ เตรียม student set ล่วงหน้า
+                all_student_ids = set()
+                for booking in bookings:
+                    all_student_ids.update(booking["studentIds"])
+
+                # ✅ สร้าง CourseSession และ Receipt ให้แต่ละ student (1 ครั้ง)
+                student_session_map = {}
+
+                for student_id in all_student_ids:
+                    student = Student.objects.get(id=student_id)
+                    session_name = f"Session-{student.id}-{course.id}-{timezone.now().strftime('%Y%m%d%H%M%S')}"
+                    session = CourseSession.objects.create(
+                        course=course,
+                        student=student,
+                        name=session_name,
+                        total_quota=course.quota
+                    )
+                        # ✅ สร้าง Receipt
+                    current_year = timezone.now().year
+                    last_receipt = Receipt.objects.filter(receipt_number__startswith=f"INV-{current_year}") \
+                        .order_by("-receipt_number").first()
+
+                    if last_receipt:
+                        last_number = int(last_receipt.receipt_number.split("-")[-1])
+                    else:
+                        last_number = 0
+                    next_number = last_number + 1
+                    receipt_number = f"INV-{current_year}-{str(next_number).zfill(5)}"
+
+                    Receipt.objects.create(
+                        student=student,
+                        session=session,
+                        amount=course.price,
+                        receipt_number=receipt_number,
+                        payment_method="CARD",
+                        notes=f"Payment for {course.name}",
+                        items=[{
+                            "description": "Course Registration Fee",
+                            "amount": course.price
+                        }],
+                        payment_date=now(),   
+                        created_at=now(),
+                    )
+
+                    student_session_map[student_id] = session
+                
+                for booking in bookings:
+                    date_str = booking["date"]
+                    start_time_str = booking["startTime"]
+                    student_ids = booking["studentIds"]
+                    is_new = booking.get("isNewSlot", False)
+
+                    booking_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+                    booking_start = datetime.strptime(start_time_str, "%H:%M").time()
+                    booking_end = time(booking_start.hour + 1, 0)
+
+                    if is_new:
+                        # ✅ Create new timeslot
+                        timeslot = Timeslot.objects.create(
+                            course=course,
+                            timeslot_date=booking_date,
+                            start_time=booking_start,
+                            end_time=booking_end
+                        )
+
+                        # ✅ Assign all teachers to the timeslot
+                        for assign in assigned_teachers:
+                            TimeslotTeacherAssignment.objects.create(
+                                timeslot=timeslot,
+                                teacher=assign.teacher
+                            )
+
+                    else:
+                        timeslot_id = booking.get("id")
+                        if not timeslot_id:
+                            return Response({"error": "Missing timeslot id for existing slot"}, status=status.HTTP_400_BAD_REQUEST)
+
+                        try:
+                            timeslot = Timeslot.objects.get(id=timeslot_id)
+                        except Timeslot.DoesNotExist:
+                            return Response({"error": f"Timeslot id {timeslot_id} not found for course"}, status=status.HTTP_404_NOT_FOUND)
+
+                    for student_id in student_ids:
+                        student = Student.objects.get(id=student_id)
+                        session = student_session_map[student_id]
+                        # ✅ Create attendance record
+                        att = Attendance.objects.create(
+                            status="absent",
+                            type="scheduled",
+                            session=session,
+                            student=student,
+                            teacher=default_teacher,  # placeholder teacher (required field)
+                            timeslot=timeslot,
+                            attendance_date=booking_date,
+                            start_time=booking_start,
+                            end_time=booking_end
+                        )
+                        created_attendance_ids.append(att.id)
+
+            return Response({
+                "message": "Attendances created successfully",
+                "count": len(created_attendance_ids),
+                "attendance_ids": created_attendance_ids
+            }, status=status.HTTP_201_CREATED)
+
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class AttendanceDetailsList(APIView):
+    def post(self, request):
+        # Get the list of attendance IDs from the request
+        attendance_ids = request.data.get('ids', [])
+        
+        # Validate if IDs are provided
+        if not attendance_ids:
+            return Response({"error": "No attendance IDs provided"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Fetch the attendance records with the provided IDs
+        attendances = Attendance.objects.filter(id__in=attendance_ids)
+        
+        # If no attendances are found
+        if not attendances:
+            return Response({"error": "No attendances found for the provided IDs"}, status=status.HTTP_404_NOT_FOUND)
+        
+        # Serialize the attendance data
+        attendance_data = [
+            {
+                "id": att.id,
+                "status": att.status,
+                "type": att.type,
+                "session": att.session.id,
+                "student": att.student.id,
+                "timeslot": att.timeslot.id,
+                "attendance_date": att.attendance_date.strftime('%Y-%m-%d'),
+                "start_time": att.start_time.strftime('%H:%M'),
+                "end_time": att.end_time.strftime('%H:%M')
+            }
+            for att in attendances
+        ]
+
+        # Return the serialized data in the response
+        return Response({"attendances": attendance_data}, status=status.HTTP_200_OK)

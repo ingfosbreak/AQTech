@@ -3,7 +3,7 @@ from django.urls import path
 # from api.views.storage_views import StorageListView, StorageDetailView
 from api.views import StorageListView, StorageDetailView, StaffUserView, UserUpdateView, UserDetailView, UserListView, StudentCreateView, StudentListView, TeacherCreateView, TeacherListView, SessionView, UserInfoView, VerifyTokenView, CombinedCountView, PieChartStaticView
 from api.views.category_view import CategoryCreateView, CategoryListView
-from api.views.course_views import CourseCreateView, CourseEnrolledView, CourseListView, CourseDetailView, CoursePriceListView, StudentCourseListView, NewUnitCourseDetailView, NewGetAddTeacherList, NewAddTeacherToCourse, NewRemoveTeacherFromCourse, NewCreateCourseAPIView, NewUnitCourseListView, NewStudentUsernameListView, TimeSlotSelectionView
+from api.views.course_views import CourseCreateView, CourseEnrolledView, CourseListView, CourseDetailView, CoursePriceListView, StudentCourseListView, NewUnitCourseDetailView, NewGetAddTeacherList, NewAddTeacherToCourse, NewRemoveTeacherFromCourse, NewCreateCourseAPIView, NewUnitCourseListView, NewStudentUsernameListView, TimeSlotSelectionView, CreateBatchAttendanceAPIView, AttendanceDetailsList
 from api.views.session_views import CourseCategoryEnrollmentView, SessionProgressDetailView, SessionProgressView
 from api.views.static_views import AttendanceHeatmapView, AttendanceLogView, CoursePerformanceView, RecentAttendanceView
 from api.views.student_views import AddStudentView, StudentStatusUpdateView, UserStudentListView
@@ -15,6 +15,7 @@ from api.views.storage_views import StorageChangeImage
 from api.views.certificate_views import CerificateListView, AllCertificate
 from api.views.attendance_views import AttendanceView, AttendanceModifyView, AttendanceListView, UpdateAttendanceStatus, AttendanceListModifyView
 from api.views.payments_views import HandleBeforePaymentView
+from api.views.receipt_views import ReceiptDetails, ReceiptListView
 # from api.views.user_views import StaffUserView, UserUpdateView
 
 urlpatterns = [
@@ -86,4 +87,8 @@ urlpatterns = [
     path('new/courses/enroll-list/', NewUnitCourseListView.as_view(), name="new-courses-list"),
     path('new/courses/student-enroll/', NewStudentUsernameListView.as_view(), name="new-students-list"),
     path('new/courses/timeslot-selection/', TimeSlotSelectionView.as_view(), name="new-time-selection"),
+    path('new/courses/create-batch/', CreateBatchAttendanceAPIView.as_view(), name="new-course-batch"),
+    path('new/courses/attend-list/', AttendanceDetailsList.as_view(), name="attend-list"),
+    path('new/receipts/all/', ReceiptListView.as_view(), name="receipt-all-new"),
+    path('new/receipts/<int:receipt_id>', ReceiptDetails.as_view(), name="receipt-detail-mew")
 ]

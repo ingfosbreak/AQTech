@@ -405,21 +405,27 @@ def create_storage():
 
 # ------------------------- Create Receipts -------------------------
 def create_receipts(students, sessions):
-    receipts = [
-        Receipt.objects.create(
-            student=random.choice(students),
-            session=random.choice(sessions),
-            amount=1000,
-            payment_date=timezone.now(),
-            payment_method="Credit Card",
-            transaction_id=f"TXN{random.randint(1000,9999)}"
+    receipts = []
+    
+    for _ in range(3):  # Create 3 receipts for example
+        student = random.choice(students)  # Randomly pick a student
+        session = random.choice(sessions)  # Randomly pick a session
+        amount = session.course.price if hasattr(session, 'course') else 1000  # Use the course price if available, default to 1000
+        
+        receipt = Receipt.objects.create(
+            student=student,
+            session=session,
+            amount=amount,
+            payment_method="CARD",  # Assuming "CARD" for now; could be dynamic if needed
+            receipt_number=f"INV-{timezone.now().year}-{random.randint(10000, 99999)}",  # Example receipt number
+            notes=f"Payment for {session.course.name} registration",  # Example note based on course name
+            items=[{"description": "Course Registration Fee", "amount": amount}]  # Example item
         )
-        for _ in range(3)
-    ]
-
+        
+        receipts.append(receipt)
+    
     print(f"✅ Created {len(receipts)} receipts.")
     return receipts
-
 
 # ------------------------- Create Certificates -------------------------
 def create_certificates(users, courses):
@@ -485,7 +491,7 @@ def populate_database():
     assign_students_to_sessions(students, sessions)
     timeslots = create_timeslot(courses)
     create_teacher_assignments()
-
+    create_receipts(students, sessions)
     # Now pass the timeslots to the create_attendance function
     create_attendance(sessions, teachers, students, timeslots)
 
