@@ -134,6 +134,7 @@ class NewUnitCourseDetailView(APIView):
                     "attendance_date": attendance.attendance_date,
                     "start_time": attendance.start_time,
                     "end_time": attendance.end_time,
+                    "checked_date": attendance.checked_date  # Add checked_date here
                 })
 
             # Only include sessions that have attendances
