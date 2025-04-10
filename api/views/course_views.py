@@ -484,6 +484,7 @@ class TimeSlotSelectionView(APIView):
                     "courseId": str(related_course.id),
                     "courseName": related_course.name,
                     "isNewSlot": False,
+                    "isSameCourse": ts.course.category.categoryName == course.category.categoryName
                 })
 
             student_attendance_data.append({
