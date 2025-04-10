@@ -94,15 +94,16 @@ class CourseEnrolledView(ListAPIView):
     serializer_class = CourseDetailedSerializer
 
 class NewUnitCourseDetailView(APIView):
-    """Admin API to get course details including assigned teachers."""
+    """Admin API to get course details including assigned teachers and sessions."""
 
     def get(self, request, id):
         try:
+            # Get the course by its ID
             course = Course.objects.get(id=id)
         except Course.DoesNotExist:
             return Response({"error": "Course not found"}, status=status.HTTP_404_NOT_FOUND)
 
-        # Get assigned teachers
+        # Get assigned teachers for the course
         assignments = TeacherAssignment.objects.filter(course=course)
         teachers = [
             {
@@ -114,7 +115,37 @@ class NewUnitCourseDetailView(APIView):
             for assignment in assignments
         ]
 
-        # Construct response (without enrolled, schedule, location, duration, startDate, endDate)
+        # Get sessions for the course
+        sessions = CourseSession.objects.filter(course=course)
+        session_data = []
+        for session in sessions:
+            # Get all attendances for this session
+            attendances = Attendance.objects.filter(session=session)
+
+            attendance_data = []
+            for attendance in attendances:
+                # Assuming each attendance record has a related student (attendance.student)
+                attendance_data.append({
+                    "id": attendance.id,
+                    "status": attendance.status,
+                    "type": attendance.type,
+                    "student_id": attendance.student.id,
+                    "student_name": attendance.student.name,
+                    "attendance_date": attendance.attendance_date,
+                    "start_time": attendance.start_time,
+                    "end_time": attendance.end_time,
+                })
+
+            # Only include sessions that have attendances
+            if attendance_data:
+                session_data.append({
+                    "id": session.id,
+                    "name": session.name,
+                    "total_quota": session.total_quota,
+                    "attendances": attendance_data
+                })
+
+        # Construct the response data for the course, including teachers and sessions
         data = {
             "id": course.id,
             "name": course.name,
@@ -127,6 +158,7 @@ class NewUnitCourseDetailView(APIView):
             "price": course.price,
             "category": course.category.categoryName,
             "teachers": teachers,
+            "sessions": session_data  # Add the sessions data
         }
 
         return Response(data, status=status.HTTP_200_OK)
