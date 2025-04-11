@@ -38,10 +38,11 @@ class UserListSerializer(serializers.ModelSerializer):
         return make_password(value)
     
 
-# 🔹 Profile Serializer (For ProfilePage API)
 class ProfileSerializer(serializers.ModelSerializer):
     students = StudentListSerializer(many=True, read_only=True)
 
     class Meta:
         model = User
-        fields = ["id", "username", "email", "contact", "students"]
+        fields = [
+            "id", "username", "email", "first_name", "last_name", "contact", "students"
+        ]

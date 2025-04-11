@@ -278,35 +278,46 @@ def assign_students_to_sessions(students, sessions):
 
 # ------------------------- Create TimeSlot -------------------------
 def create_timeslot(courses, num_timeslots=10):
-    """Create a list of timeslots for multiple courses, scheduling weekly in the future."""
-    timeslots = [
+    """Create a list of timeslots for multiple courses, scheduling weekly in the future without collisions."""
+    available_times = [
         '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00'
     ]
     
     # Start scheduling from next Monday
     today = datetime.today()
-    days_until_monday = (7 - today.weekday()) % 7  # 0 if Monday, otherwise days until next Monday
+    days_until_monday = (7 - today.weekday()) % 7
     first_timeslot_date = today + timedelta(days=days_until_monday)
 
     for course in courses:
+        used_times_per_date = {}  # Key: date, Value: list of used start times
+
         for i in range(num_timeslots):
-            start_time_str = random.choice(timeslots)
-            start_time = datetime.strptime(start_time_str, '%H:%M').time()
-            
-            # Example end time (assuming 1-hour sessions)
-            end_time = (datetime.combine(datetime.today(), start_time) + timedelta(hours=1)).time()
-            
-            # Calculate timeslot_date (weekly increment)
             timeslot_date = first_timeslot_date + timedelta(weeks=i)
-            
-            # Create the timeslot object
+
+            # Get list of already used times for this date
+            used_times = used_times_per_date.get(timeslot_date, [])
+
+            # Find available times for this date
+            remaining_times = [t for t in available_times if t not in used_times]
+            if not remaining_times:
+                print(f"⚠️ No more available timeslots on {timeslot_date} for course {course.name}.")
+                continue
+
+            # Pick a time randomly from remaining options
+            start_time_str = random.choice(remaining_times)
+            used_times.append(start_time_str)  # Mark it as used
+            used_times_per_date[timeslot_date] = used_times
+
+            start_time = datetime.strptime(start_time_str, '%H:%M').time()
+            end_time = (datetime.combine(datetime.today(), start_time) + timedelta(hours=1)).time()
+
             Timeslot.objects.create(
                 course=course,
                 timeslot_date=timeslot_date,
                 start_time=start_time,
                 end_time=end_time
             )
-        
+
         print(f"✅ {num_timeslots} timeslots created for course {course.name}.")
 
 # ------------------------- Create Attendance -------------------------

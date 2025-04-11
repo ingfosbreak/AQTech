@@ -7,7 +7,7 @@ class StudentSerializer(serializers.ModelSerializer):
     user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
     class Meta:
         model = Student
-        fields = ["id", "user", "name", "birthdate"]
+        fields = ["id", "user", "name", "birthdate", "sessions", "status"]
 
 class StudentListSerializer(serializers.ModelSerializer):
     user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())

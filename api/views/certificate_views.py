@@ -80,7 +80,7 @@ class AllCertificate(APIView):
         for certificate in certificates:
             certificate_data.append({
                 'id': certificate.id,
-                'course': certificate.course.courseName,  # Adjust if needed to retrieve course info
+                'course': certificate.course.name,  # Adjust if needed to retrieve course info
                 'status': certificate.status,  # Added status field here
                 'certificate_url': certificate.certificate_url,
             })
