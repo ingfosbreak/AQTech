@@ -419,6 +419,11 @@ class TimeSlotSelectionView(APIView):
         for ts in course_timeslots:
             current_attendance = Attendance.objects.filter(timeslot=ts).count()
             available_quota = category_quota - current_attendance
+            enrolled_students = Attendance.objects.filter(timeslot=ts).select_related("student")
+            student_list = [
+                {"id": att.student.id, "name": att.student.name}
+                for att in enrolled_students
+            ]
             course_timeslot_data.append({
                 "id": ts.id,
                 "date": ts.timeslot_date.isoformat(),
@@ -429,6 +434,7 @@ class TimeSlotSelectionView(APIView):
                 "courseId": str(course.id),
                 "courseName": course.name,
                 "isNewSlot": False,
+                "enrolledStudents": student_list
             })
 
         # 3. Timeslots of other courses in same category
@@ -441,6 +447,11 @@ class TimeSlotSelectionView(APIView):
             other_quota = get_quota_for_category(other_course.category.categoryName)
             current_attendance = Attendance.objects.filter(timeslot=ts).count()
             available_quota = other_quota - current_attendance
+            enrolled_students = Attendance.objects.filter(timeslot=ts).select_related("student")
+            student_list = [
+                {"id": att.student.id, "name": att.student.name}
+                for att in enrolled_students
+            ]
             other_timeslot_data.append({
                 "id": ts.id,
                 "date": ts.timeslot_date.isoformat(),
@@ -451,6 +462,7 @@ class TimeSlotSelectionView(APIView):
                 "courseId": str(other_course.id),
                 "courseName": other_course.name,
                 "isNewSlot": False,  # Always true since same category
+                "enrolledStudents": student_list,
             })
 
         # 4. Student attendance records (future only)
@@ -520,6 +532,7 @@ class CreateBatchAttendanceAPIView(APIView):
 
             today = timezone.localdate()
             created_attendance_ids = []
+            session_data_map = {}
 
             with transaction.atomic():
 
@@ -552,7 +565,7 @@ class CreateBatchAttendanceAPIView(APIView):
                     next_number = last_number + 1
                     receipt_number = f"INV-{current_year}-{str(next_number).zfill(5)}"
 
-                    Receipt.objects.create(
+                    receipt = Receipt.objects.create(
                         student=student,
                         session=session,
                         amount=course.price,
@@ -568,6 +581,25 @@ class CreateBatchAttendanceAPIView(APIView):
                     )
 
                     student_session_map[student_id] = session
+
+                    session_data_map[session.id] = {
+                        "session_id": session.id,
+                        "student_id": student.id,
+                        "student_name": student.name,
+                        "course_name": course.name,
+                        "receipt": {
+                            "id": receipt.id,
+                            "receipt_number": receipt_number,
+                            "amount": course.price,
+                            "payment_method": "CARD",
+                            "notes": f"Payment for {course.name}",
+                            "items": [{
+                                "description": "Course Registration Fee",
+                                "amount": course.price
+                            }]
+                        },
+                        "attendances": []
+                    }
                 
                 for booking in bookings:
                     date_str = booking["date"]
@@ -622,10 +654,18 @@ class CreateBatchAttendanceAPIView(APIView):
                         )
                         created_attendance_ids.append(att.id)
 
+                        session_data_map[session.id]["attendances"].append({
+                            "attendance_id": att.id,
+                            "timeslot_id": timeslot.id,
+                            "date": str(booking_date),
+                            "start_time": str(booking_start),
+                            "end_time": str(booking_end)
+                        })
+
             return Response({
-                "message": "Attendances created successfully",
-                "count": len(created_attendance_ids),
-                "attendance_ids": created_attendance_ids
+                "message": "Attendances and receipts created successfully",
+                "session_count": len(session_data_map),
+                "sessions": list(session_data_map.values())
             }, status=status.HTTP_201_CREATED)
 
         except Exception as e:
