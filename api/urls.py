@@ -15,7 +15,7 @@ from api.views.storage_views import StorageChangeImage
 from api.views.certificate_views import CerificateListView, AllCertificate
 from api.views.attendance_views import AttendanceView, AttendanceModifyView, AttendanceListView, UpdateAttendanceStatus, AttendanceListModifyView
 from api.views.payments_views import HandleBeforePaymentView
-from api.views.receipt_views import ReceiptDetails, ReceiptListView
+from api.views.receipt_views import ReceiptDetails, ReceiptListView, MyInvoiceView, MyInvoiceDetailView
 # from api.views.user_views import StaffUserView, UserUpdateView
 
 urlpatterns = [
@@ -90,5 +90,7 @@ urlpatterns = [
     path('new/courses/create-batch/', CreateBatchAttendanceAPIView.as_view(), name="new-course-batch"),
     path('new/courses/attend-list/', AttendanceDetailsList.as_view(), name="attend-list"),
     path('new/receipts/all/', ReceiptListView.as_view(), name="receipt-all-new"),
-    path('new/receipts/<int:receipt_id>', ReceiptDetails.as_view(), name="receipt-detail-mew")
+    path('new/receipts/<int:receipt_id>', ReceiptDetails.as_view(), name="receipt-detail-mew"),
+    path('new/receipts/students/', MyInvoiceView.as_view(), name="new-student-invoice"),
+    path('new/receipts/students/<int:receipt_id>', MyInvoiceDetailView.as_view(), name="new-student-invoice-detail")
 ]
