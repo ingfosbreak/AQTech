@@ -546,14 +546,16 @@ class CreateBatchAttendanceAPIView(APIView):
 
                 for student_id in all_student_ids:
                     student = Student.objects.get(id=student_id)
-                    session_name = f"Session-{student.id}-{course.id}-{timezone.now().strftime('%Y%m%d%H%M%S')}"
+                    # Create session name with student's name, course name, and current date (YYYYMMDD)
+                    session_name = f"{student.name}-{course.name}-{timezone.now().strftime('%Y%m%d')}"
                     session = CourseSession.objects.create(
                         course=course,
                         student=student,
-                        name=session_name,
+                        name=session_name,  # Updated session name
                         total_quota=course.quota
                     )
-                        # ✅ สร้าง Receipt
+
+                    # ✅ สร้าง Receipt
                     current_year = timezone.now().year
                     last_receipt = Receipt.objects.filter(receipt_number__startswith=f"INV-{current_year}") \
                         .order_by("-receipt_number").first()
@@ -600,7 +602,7 @@ class CreateBatchAttendanceAPIView(APIView):
                         },
                         "attendances": []
                     }
-                
+
                 for booking in bookings:
                     date_str = booking["date"]
                     start_time_str = booking["startTime"]

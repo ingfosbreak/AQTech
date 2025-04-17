@@ -23,7 +23,8 @@ class ReceiptDetails(APIView):
                 "date": att.attendance_date.isoformat(),
                 "start_time": att.start_time.strftime("%H:%M") if att.start_time else None,
                 "end_time": att.end_time.strftime("%H:%M") if att.end_time else None,
-                "timeslot_id": att.timeslot.id if att.timeslot else None
+                "timeslot_id": att.timeslot.id if att.timeslot else None,
+                "checked_date": att.checked_date.isoformat() if att.checked_date else None  # Added checked_date field
             })
 
         response_data = {
@@ -103,7 +104,8 @@ class MyInvoiceView(APIView):
                     "date": att.attendance_date.isoformat(),
                     "start_time": att.start_time.strftime("%H:%M") if att.start_time else None,
                     "end_time": att.end_time.strftime("%H:%M") if att.end_time else None,
-                    "timeslot_id": att.timeslot.id if att.timeslot else None
+                    "timeslot_id": att.timeslot.id if att.timeslot else None,
+                    "checked_date": att.checked_date.isoformat() if att.checked_date else None  # Added checked_date field
                 })
 
             # ✅ Push full receipt data
@@ -135,7 +137,6 @@ class MyInvoiceView(APIView):
 
 class MyInvoiceDetailView(APIView):
     def get(self, request, receipt_id):
-
         # ✅ Get receipt if it belongs to the logged-in student
         receipt = get_object_or_404(Receipt.objects.select_related("session__course", "student__user"), id=receipt_id)
 
@@ -153,7 +154,8 @@ class MyInvoiceDetailView(APIView):
                 "date": att.attendance_date.isoformat(),
                 "start_time": att.start_time.strftime("%H:%M") if att.start_time else None,
                 "end_time": att.end_time.strftime("%H:%M") if att.end_time else None,
-                "timeslot_id": att.timeslot.id if att.timeslot else None
+                "timeslot_id": att.timeslot.id if att.timeslot else None,
+                "checked_date": att.checked_date.isoformat() if att.checked_date else None  # Added checked_date field
             })
 
         # ✅ Response format
